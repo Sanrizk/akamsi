@@ -1,119 +1,98 @@
 <!DOCTYPE html>
-<html th:replace="~{layout/base :: layout('Kelola Users', ~{::content})}">
-<head></head>
+<html th:replace="~{layout/base :: layout('Manajemen Pengguna', ~{::content})}">
 <body>
-    <div th:fragment="content">
-
-        <!-- Page Title + Add Button -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h3 class="fw-bold mb-1">Kelola Users</h3>
-                <p class="text-muted mb-0">Manajemen akun Admin, Guru, dan Siswa.</p>
-            </div>
-            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal">
-                <i class="bi bi-plus-lg me-2"></i>Tambah User
+<div th:fragment="content">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Manajemen Pengguna (Admin & Guru)</h3>
+            <p class="text-muted mb-0">Kelola akun dan role pengguna sistem.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambahUser">
+                <i class="bi bi-person-plus-fill me-1"></i> Tambah Pengguna
             </button>
         </div>
-
-        <!-- Table -->
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0 align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-4">ID</th>
-                                <th>Username</th>
-                                <th>Nama Lengkap</th>
-                                <th>Role</th>
-                                <th class="pe-4 text-end">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="u : ${users}">
-                                <td class="ps-4" th:text="${u.id}"></td>
-                                <td th:text="${u.username}"></td>
-                                <td class="fw-semibold" th:text="${u.namaLengkap}"></td>
-                                <td>
-                                    <span class="badge rounded-pill px-3 py-2"
-                                          th:classappend="${u.role.name() == 'ADMIN' ? 'bg-danger bg-opacity-10 text-danger' : (u.role.name() == 'GURU' ? 'bg-primary bg-opacity-10 text-primary' : 'bg-success bg-opacity-10 text-success')}"
-                                          th:text="${u.role}"></span>
-                                </td>
-                                <td class="pe-4 text-end">
-                                    <!-- Edit Button -->
-                                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
-                                            th:data-bs-target="'#editModal' + ${u.id}">
-                                        <i class="bi bi-pencil-square"></i> Edit
-                                    </button>
-                                    <!-- Delete Button -->
-                                    <form th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Yakin hapus user ini?')">
-                                            <i class="bi bi-trash"></i> Hapus
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== EDIT MODALS (one per row) ========== -->
-        <div th:each="u : ${users}">
-            <div class="modal fade" th:id="'editModal' + ${u.id}" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content border-0 shadow">
-                        <form th:action="@{/admin/users/edit/{id}(id=${u.id})}" method="post">
-                            <div class="modal-header">
-                                <h5 class="modal-title fw-bold">Edit User</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label small fw-semibold">Username</label>
-                                    <input type="text" name="username" class="form-control" th:value="${u.username}" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label small fw-semibold">Password <small class="text-muted">(kosongkan jika tidak diubah)</small></label>
-                                    <input type="password" name="password" class="form-control">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label small fw-semibold">Nama Lengkap</label>
-                                    <input type="text" name="namaLengkap" class="form-control" th:value="${u.namaLengkap}" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label small fw-semibold">Role</label>
-                                    <select name="role" class="form-select" required>
-                                        <option value="ADMIN" th:selected="${u.role.name() == 'ADMIN'}">ADMIN</option>
-                                        <option value="GURU" th:selected="${u.role.name() == 'GURU'}">GURU</option>
-                                        <option value="SISWA" th:selected="${u.role.name() == 'SISWA'}">SISWA</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- ========== ADD MODAL ========== -->
-    <div class="modal fade" id="addModal" tabindex="-1">
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Responsive Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">Daftar Pengguna</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>Nama Lengkap</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Tanggal Dibuat</th>
+                            <th class="pe-4 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u, iter : ${users}">
+                            <td class="ps-4 text-muted" th:text="${iter.count}"></td>
+                            <td class="fw-bold text-dark" th:text="${u.namaLengkap}"></td>
+                            <td class="text-secondary" th:text="${u.username}"></td>
+                            <td>
+                                <span th:if="${u.role.name() == 'ADMIN'}" class="badge bg-primary px-3 rounded-pill">ADMIN</span>
+                                <span th:if="${u.role.name() == 'GURU'}" class="badge bg-info text-dark px-3 rounded-pill">GURU</span>
+                                <span th:if="${u.role.name() == 'SISWA'}" class="badge bg-secondary px-3 rounded-pill">SISWA</span>
+                            </td>
+                            <td th:text="${u.createdAt != null ? #temporals.format(u.createdAt, 'dd-MM-yyyy HH:mm') : '-'}"></td>
+                            <td class="pe-4 text-end text-nowrap">
+                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-user"
+                                        th:data-id="${u.id}"
+                                        th:data-username="${u.username}"
+                                        th:data-nama="${u.namaLengkap}"
+                                        th:data-role="${u.role.name()}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                
+                                <form th:if="${#authentication.principal.user.id != u.id}" th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus pengguna ini secara permanen?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus Pengguna">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${users == null or users.isEmpty()}">
+                            <td colspan="6" class="text-center py-5 text-muted">Belum ada data pengguna.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah User -->
+    <div class="modal fade" id="modalTambahUser" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
                 <form th:action="@{/admin/users/add}" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Tambah User Baru</h5>
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Tambah Pengguna Baru</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Nama Lengkap</label>
+                            <input type="text" name="namaLengkap" class="form-control" required>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">Username</label>
                             <input type="text" name="username" class="form-control" required>
@@ -123,26 +102,83 @@
                             <input type="password" name="password" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Nama Lengkap</label>
-                            <input type="text" name="namaLengkap" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
                             <label class="form-label small fw-semibold">Role</label>
                             <select name="role" class="form-select" required>
-                                <option value="ADMIN">ADMIN</option>
-                                <option value="GURU">GURU</option>
-                                <option value="SISWA">SISWA</option>
+                                <option value="" disabled selected>-- Pilih Role --</option>
+                                <option th:each="r : ${roles}" th:value="${r.name()}" th:text="${r.name()}"></option>
                             </select>
                         </div>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer bg-light border-0">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Tambah</button>
+                        <button type="submit" class="btn btn-primary px-4">Simpan Pengguna</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
+    <!-- Modal Edit User -->
+    <div class="modal fade" id="modalEditUser" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <form id="formEditUser" method="post">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Edit Data Pengguna</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Nama Lengkap</label>
+                            <input type="text" name="namaLengkap" id="editNama" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Username</label>
+                            <input type="text" name="username" id="editUsername" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Role</label>
+                            <select name="role" id="editRole" class="form-select" required>
+                                <option th:each="r : ${roles}" th:value="${r.name()}" th:text="${r.name()}"></option>
+                            </select>
+                        </div>
+                        <hr class="my-3">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Password Baru (Kosongkan jika tidak ingin mengubah)</label>
+                            <input type="password" name="password" class="form-control" placeholder="Ketik password baru">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4">Perbarui Pengguna</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client-side Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButtons = document.querySelectorAll('.btn-edit-user');
+            const formEdit = document.getElementById('formEditUser');
+            
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    
+                    document.getElementById('editUsername').value = this.getAttribute('data-username');
+                    document.getElementById('editNama').value = this.getAttribute('data-nama');
+                    document.getElementById('editRole').value = this.getAttribute('data-role');
+                    
+                    formEdit.action = '/admin/users/edit/' + id;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('modalEditUser'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+</div>
 </body>
 </html>
