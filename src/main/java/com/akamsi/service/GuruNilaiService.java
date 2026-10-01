@@ -1,40 +1,53 @@
 package com.akamsi.service;
 
-import com.akamsi.entity.*;
-import com.akamsi.repository.*;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.akamsi.dto.FormInputNilaiDTO;
+import com.akamsi.dto.ItemNilaiDTO;
+import com.akamsi.entity.KomponenNilai;
+import com.akamsi.entity.NilaiSiswa;
+import com.akamsi.entity.Siswa;
+import com.akamsi.entity.RaporAkhir;
+import com.akamsi.entity.KategoriNilai;
+import com.akamsi.entity.Kelas;
+import com.akamsi.entity.MataPelajaran;
+import com.akamsi.repository.KomponenNilaiRepository;
+import com.akamsi.repository.NilaiSiswaRepository;
+import com.akamsi.repository.RaporAkhirRepository;
+import com.akamsi.repository.KelasRepository;
+import com.akamsi.repository.MataPelajaranRepository;
+import com.akamsi.repository.SiswaRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class GuruNilaiService {
     
-    private final KomponenNilaiRepository komponenRepo;
-    private final NilaiSiswaRepository nilaiSiswaRepo;
-    private final RaporAkhirRepository raporRepo;
-    private final KelasRepository kelasRepo;
-    private final MataPelajaranRepository mapelRepo;
-    private final SiswaRepository siswaRepo;
+    @Autowired
+    private KomponenNilaiRepository komponenNilaiRepository;
 
-    public GuruNilaiService(KomponenNilaiRepository komponenRepo, 
-                            NilaiSiswaRepository nilaiSiswaRepo, 
-                            RaporAkhirRepository raporRepo,
-                            KelasRepository kelasRepo,
-                            MataPelajaranRepository mapelRepo,
-                            SiswaRepository siswaRepo) {
-        this.komponenRepo = komponenRepo;
-        this.nilaiSiswaRepo = nilaiSiswaRepo;
-        this.raporRepo = raporRepo;
-        this.kelasRepo = kelasRepo;
-        this.mapelRepo = mapelRepo;
-        this.siswaRepo = siswaRepo;
-    }
+    @Autowired
+    private NilaiSiswaRepository nilaiSiswaRepository;
+
+    @Autowired
+    private SiswaRepository siswaRepository;
+
+    @Autowired
+    private RaporAkhirRepository raporRepo;
+
+    @Autowired
+    private KelasRepository kelasRepo;
+
+    @Autowired
+    private MataPelajaranRepository mapelRepo;
 
     public List<KomponenNilai> getKomponenByKelasAndMapel(Long kelasId, Long mapelId) {
-        return komponenRepo.findByKelasIdAndMapelId(kelasId, mapelId);
+        return komponenNilaiRepository.findByKelasIdAndMapelId(kelasId, mapelId);
     }
 
     public void createKomponenNilai(Long kelasId, Long mapelId, String namaKomponen, 
@@ -51,29 +64,80 @@ public class GuruNilaiService {
         kn.setKategoriNilai(kategoriNilai);
         kn.setDeskripsiTujuanPembelajaran(deskripsiTujuan);
         
-        komponenRepo.save(kn);
+        komponenNilaiRepository.save(kn);
     }
 
-    public void saveBulkNilaiSiswa(Long komponenId, Map<Long, Double> nilaiMap) {
-        KomponenNilai kn = komponenRepo.findById(komponenId)
-                .orElseThrow(() -> new IllegalArgumentException("Komponen not found"));
+    @Transactional(readOnly = true)
+    public KomponenNilai getKomponenById(Long id) {
+        KomponenNilai kn = komponenNilaiRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Komponen tidak ditemukan"));
+        // Force initialize LAZY relations
+        if (kn.getKelas() != null) kn.getKelas().getNamaKelas();
+        if (kn.getMapel() != null) kn.getMapel().getNamaMapel();
+        return kn;
+    }
 
-        for (Map.Entry<Long, Double> entry : nilaiMap.entrySet()) {
-            Long siswaId = entry.getKey();
-            Double score = entry.getValue();
+    @Transactional(readOnly = true)
+    public FormInputNilaiDTO getFormInputNilai(Long komponenId) {
+        KomponenNilai komponen = komponenNilaiRepository.findById(komponenId)
+                .orElseThrow(() -> new RuntimeException("Komponen nilai tidak ditemukan dengan ID: " + komponenId));
 
-            Siswa siswa = siswaRepo.findById(siswaId)
-                    .orElseThrow(() -> new IllegalArgumentException("Siswa not found for id " + siswaId));
-            
-            // Note: Ideally you would check if NilaiSiswa already exists and update it, 
-            // but for simplicity in this bulk logic we are creating new ones or assuming clean inserts.
-            // (In a real app, query by siswaId and komponenId first).
-            NilaiSiswa ns = new NilaiSiswa();
-            ns.setSiswa(siswa);
-            ns.setKomponenNilai(kn);
-            ns.setNilai(score);
-            
-            nilaiSiswaRepo.save(ns);
+        if (komponen.getKelas() == null) {
+            throw new IllegalStateException("Komponen penilaian tidak terhubung dengan Kelas mana pun.");
+        }
+
+        Long kelasId = komponen.getKelas().getId();
+        List<Siswa> siswaList = siswaRepository.findByKelasId(kelasId);
+
+        List<NilaiSiswa> existingGrades = nilaiSiswaRepository.findByKomponenNilaiId(komponenId);
+        Map<Long, Double> gradeMap = existingGrades.stream()
+                .collect(Collectors.toMap(
+                        n -> n.getSiswa().getId(),
+                        NilaiSiswa::getNilai,
+                        (existing, replacing) -> existing
+                ));
+
+        FormInputNilaiDTO form = new FormInputNilaiDTO();
+        form.setKomponenId(komponen.getId());
+        form.setKelasId(kelasId);
+        form.setMapelId(komponen.getMapel().getId());
+
+        List<ItemNilaiDTO> items = new ArrayList<>();
+        for (Siswa s : siswaList) {
+            ItemNilaiDTO item = new ItemNilaiDTO();
+            item.setSiswaId(s.getId());
+            item.setNisn(s.getNisn());
+            item.setNamaSiswa(s.getNamaSiswa());
+            item.setNilai(gradeMap.get(s.getId()));
+            items.add(item);
+        }
+        form.setItems(items);
+
+        return form;
+    }
+
+    @Transactional
+    public void saveBulkNilai(FormInputNilaiDTO form) {
+        KomponenNilai komponen = komponenNilaiRepository.findById(form.getKomponenId())
+                .orElseThrow(() -> new RuntimeException("Komponen tidak ditemukan"));
+
+        if (form.getItems() != null) {
+            for (ItemNilaiDTO item : form.getItems()) {
+                if (item.getNilai() != null) {
+                    Optional<NilaiSiswa> opt = nilaiSiswaRepository
+                            .findByKomponenNilaiIdAndSiswaId(komponen.getId(), item.getSiswaId());
+
+                    NilaiSiswa ns = opt.orElseGet(NilaiSiswa::new);
+                    if (ns.getId() == null) {
+                        Siswa s = siswaRepository.findById(item.getSiswaId())
+                                .orElseThrow(() -> new RuntimeException("Siswa tidak ditemukan"));
+                        ns.setSiswa(s);
+                        ns.setKomponenNilai(komponen);
+                    }
+                    ns.setNilai(item.getNilai());
+                    nilaiSiswaRepository.save(ns);
+                }
+            }
         }
     }
 
@@ -81,14 +145,13 @@ public class GuruNilaiService {
         MataPelajaran mapel = mapelRepo.findById(mapelId)
                 .orElseThrow(() -> new IllegalArgumentException("Mapel not found"));
 
-        // Fetch all components for this subject and class
-        List<KomponenNilai> komponenList = komponenRepo.findByKelasIdAndMapelId(kelasId, mapelId);
-        List<Siswa> siswaList = siswaRepo.findAll().stream()
+        List<KomponenNilai> komponenList = komponenNilaiRepository.findByKelasIdAndMapelId(kelasId, mapelId);
+        List<Siswa> siswaList = siswaRepository.findAll().stream()
                 .filter(s -> s.getKelas() != null && s.getKelas().getId().equals(kelasId))
                 .toList();
 
         for (Siswa s : siswaList) {
-            List<NilaiSiswa> nilaiListSiswa = nilaiSiswaRepo.findBySiswaId(s.getId()).stream()
+            List<NilaiSiswa> nilaiListSiswa = nilaiSiswaRepository.findBySiswaId(s.getId()).stream()
                     .filter(n -> n.getKomponenNilai().getMapel().getId().equals(mapelId))
                     .toList();
 

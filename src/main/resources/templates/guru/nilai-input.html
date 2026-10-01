@@ -1,118 +1,79 @@
 <!DOCTYPE html>
-<html th:replace="~{layout/base :: layout('Input Batch Nilai', ~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Input Nilai Siswa', ~{::content})}">
 <head>
-    <style th:fragment="extra_css">
-        .floating-action-bar {
-            position: sticky;
-            bottom: 0;
-            background: white;
-            z-index: 1020;
-            border-top: 1px solid #E2E8F0;
-            padding: 1rem 1.5rem;
-            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-    </style>
+  <title>Input Nilai Siswa</title>
 </head>
 <body>
-<div th:fragment="content">
-    
-    <!-- Breadcrumb Navigation -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a th:href="@{/guru/nilai(kelasId=${kelasId}, mapelId=${mapelId})}" class="text-decoration-none">Dashboard Penilaian</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Input Batch Nilai</li>
-        </ol>
-    </nav>
-
-    <!-- Header Metadata Card -->
-    <div class="card shadow-sm border-0 mb-4 bg-primary text-white overflow-hidden position-relative">
-        <div class="card-body p-4 position-relative" style="z-index: 2;">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <span class="badge bg-white text-primary rounded-pill mb-2 fw-semibold px-3 py-1 shadow-sm" th:text="${kategori}">HARIAN</span>
-                    <h3 class="fw-bold mb-1" th:text="${namaAsesmen}">Sumatif Bab 1</h3>
-                    <p class="mb-0 opacity-75">
-                        <i class="bi bi-door-open-fill me-1"></i> Kelas: <span th:text="${namaKelas}">Kelas 1A</span> &bull; 
-                        <i class="bi bi-book-half me-1"></i> Mapel: <span th:text="${namaMapel}">Matematika</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-        <!-- Decorative SVG / BG Pattern for SaaS feel -->
-        <div class="position-absolute top-0 end-0 h-100 w-50 opacity-10" style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8)); z-index: 1;"></div>
+  <div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item">
+              <a th:href="@{/guru/nilai(kelasId=${komponen.kelas.id}, mapelId=${komponen.mapel.id})}">Penilaian</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Input Nilai</li>
+          </ol>
+        </nav>
+        <h4 class="mb-0 fw-bold" th:text="${komponen.namaKomponen}">Sumatif Bab 1</h4>
+      </div>
+      <div>
+        <span class="badge bg-primary fs-6 me-2" th:text="${komponen.kelas.namaKelas}">Kelas 1A</span>
+        <span class="badge bg-secondary fs-6" th:text="${komponen.mapel.namaMapel}">Matematika</span>
+      </div>
     </div>
 
-    <!-- Student Scoring Form -->
-    <form th:action="@{/guru/nilai/input/save}" th:object="${formNilai}" method="post">
-        
-        <!-- Hidden Context Keys -->
-        <input type="hidden" name="komponenId" th:value="${komponenId}" />
-        <input type="hidden" name="kelasId" th:value="${kelasId}" />
-        <input type="hidden" name="mapelId" th:value="${mapelId}" />
-        
-        <div class="card shadow-sm border-0 mb-5">
-            <div class="card-header bg-white py-3 border-bottom-0">
-                <h5 class="mb-0 fw-bold">Daftar Siswa</h5>
-            </div>
-            
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-4" style="width: 5%">No</th>
-                                <th style="width: 20%">NISN</th>
-                                <th style="width: 35%">Nama Lengkap</th>
-                                <th class="text-center" style="width: 15%">Status</th>
-                                <th class="pe-4 text-end" style="width: 25%">Skor (0-100)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="item, stat : *{items}">
-                                <!-- Hidden input binding for Siswa ID -->
-                                <input type="hidden" th:field="*{items[__${stat.index}__].siswaId}" />
-                                
-                                <td class="ps-4 text-muted fw-medium" th:text="${stat.count}"></td>
-                                <td class="text-secondary" th:text="${item.nisn}">00000000</td>
-                                <td class="fw-bold text-dark" th:text="${item.namaSiswa}">Nama Siswa</td>
-                                <td class="text-center">
-                                    <!-- Dynamic Badge based on value presence -->
-                                    <span th:if="${item.nilai != null}" class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">Sudah Dinilai</span>
-                                    <span th:unless="${item.nilai != null}" class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3">Kosong</span>
-                                </td>
-                                <td class="pe-4">
-                                    <!-- Input Field Binding -->
-                                    <input type="number" 
-                                           step="0.1" 
-                                           min="0" 
-                                           max="100" 
-                                           class="form-control form-control-sm text-end ms-auto fw-bold text-primary" 
-                                           style="max-width: 130px; font-size: 1.1rem;" 
-                                           th:field="*{items[__${stat.index}__].nilai}" 
-                                           placeholder="0.0" />
-                                </td>
-                            </tr>
-                            <tr th:if="${formNilai == null or formNilai.items == null or formNilai.items.isEmpty()}">
-                                <td colspan="5" class="text-center py-5 text-muted">
-                                    <i class="bi bi-people fs-1 d-block mb-2 text-light"></i>
-                                    Tidak ada data siswa ditemukan untuk kelas ini.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Floating / Fixed Bottom Action Bar -->
-            <div class="floating-action-bar d-flex justify-content-end align-items-center gap-3">
-                <a th:href="@{/guru/nilai(kelasId=${kelasId}, mapelId=${mapelId})}" class="btn btn-light border fw-semibold px-4">Batal</a>
-                <button type="submit" class="btn btn-primary shadow-sm px-5 fw-bold">
-                    <i class="bi bi-check-all me-1"></i> Simpan Semua Nilai
-                </button>
-            </div>
-        </div>
-    </form>
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <form th:action="@{/guru/nilai/input/save}" th:object="${formNilai}" method="post">
+          <input type="hidden" th:field="*{komponenId}" />
+          <input type="hidden" th:field="*{kelasId}" />
+          <input type="hidden" th:field="*{mapelId}" />
 
-</div>
+          <div th:if="${#lists.isEmpty(formNilai.items)}" class="alert alert-warning text-center my-3">
+            <i class="bi bi-exclamation-triangle me-2"></i> Belum ada siswa yang terdaftar di kelas ini. Silakan tambahkan siswa terlebih dahulu melalui menu Admin.
+          </div>
+
+          <div th:if="${!#lists.isEmpty(formNilai.items)}">
+            <div class="table-responsive mb-3">
+              <table class="table table-bordered table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 5%;" class="text-center">No</th>
+                    <th style="width: 20%;">NISN</th>
+                    <th>Nama Siswa</th>
+                    <th style="width: 25%;">Nilai (0 - 100)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="item, stat : *{items}">
+                    <td class="text-center" th:text="${stat.count}">1</td>
+                    <td th:text="${item.nisn}">00123</td>
+                    <td th:text="${item.namaSiswa}" class="fw-bold">Nama Siswa</td>
+                    <td>
+                      <input type="hidden" th:field="*{items[__${stat.index}__].siswaId}" />
+                      <input type="hidden" th:field="*{items[__${stat.index}__].nisn}" />
+                      <input type="hidden" th:field="*{items[__${stat.index}__].namaSiswa}" />
+                      <input type="number" step="0.1" min="0" max="100" class="form-control"
+                             th:field="*{items[__${stat.index}__].nilai}" placeholder="0 - 100" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <a th:href="@{/guru/nilai(kelasId=${formNilai.kelasId}, mapelId=${formNilai.mapelId})}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Batal / Kembali
+              </a>
+              <button type="submit" class="btn btn-success px-4">
+                <i class="bi bi-save me-1"></i> Simpan Semua Nilai
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

@@ -1,11 +1,14 @@
 package com.akamsi.controller;
 
+import com.akamsi.dto.FormInputNilaiDTO;
 import com.akamsi.dto.MapelOptionDTO;
 import com.akamsi.entity.KategoriNilai;
 import com.akamsi.entity.Kelas;
+import com.akamsi.entity.KomponenNilai;
 import com.akamsi.entity.MataPelajaran;
 import com.akamsi.repository.JadwalPelajaranRepository;
 import com.akamsi.repository.KelasRepository;
+import com.akamsi.repository.KomponenNilaiRepository;
 import com.akamsi.repository.MataPelajaranRepository;
 import com.akamsi.security.CustomUserDetails;
 import com.akamsi.service.GuruNilaiService;
@@ -15,9 +18,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -28,15 +29,18 @@ public class GuruNilaiController {
     private final JadwalPelajaranRepository jadwalPelajaranRepository;
     private final KelasRepository kelasRepository;
     private final MataPelajaranRepository mapelRepository;
+    private final KomponenNilaiRepository komponenNilaiRepository;
 
     public GuruNilaiController(GuruNilaiService nilaiService,
                                JadwalPelajaranRepository jadwalPelajaranRepository,
                                KelasRepository kelasRepository,
-                               MataPelajaranRepository mapelRepository) {
+                               MataPelajaranRepository mapelRepository,
+                               KomponenNilaiRepository komponenNilaiRepository) {
         this.nilaiService = nilaiService;
         this.jadwalPelajaranRepository = jadwalPelajaranRepository;
         this.kelasRepository = kelasRepository;
         this.mapelRepository = mapelRepository;
+        this.komponenNilaiRepository = komponenNilaiRepository;
     }
 
     @GetMapping
@@ -46,12 +50,7 @@ public class GuruNilaiController {
                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
         
         Long userId = userDetails.getUser().getId();
-        
         List<Kelas> kelasList = jadwalPelajaranRepository.findDistinctKelasByUserId(userId);
-        
-        System.out.println("DEBUG [GuruNilaiController] User ID: " + userId);
-        System.out.println("DEBUG [GuruNilaiController] Classes found: " + kelasList.size());
-        
         model.addAttribute("kelasList", kelasList);
 
         if (kelasId != null) {
@@ -107,6 +106,7 @@ public class GuruNilaiController {
                                  @RequestParam Long mapelId,
                                  RedirectAttributes ra) {
         try {
+            komponenNilaiRepository.deleteById(id);
             ra.addFlashAttribute("success", "Komponen berhasil dihapus.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
@@ -128,66 +128,25 @@ public class GuruNilaiController {
         return "redirect:/guru/nilai?kelasId=" + kelasId + "&mapelId=" + mapelId;
     }
 
-    public static class FormNilaiWrapper {
-        private java.util.List<NilaiItem> items = new java.util.ArrayList<>();
-        public java.util.List<NilaiItem> getItems() { return items; }
-        public void setItems(java.util.List<NilaiItem> items) { this.items = items; }
-    }
-
-    public static class NilaiItem {
-        private Long siswaId;
-        private String nisn;
-        private String namaSiswa;
-        private Double nilai;
-        public Long getSiswaId() { return siswaId; }
-        public void setSiswaId(Long siswaId) { this.siswaId = siswaId; }
-        public String getNisn() { return nisn; }
-        public void setNisn(String nisn) { this.nisn = nisn; }
-        public String getNamaSiswa() { return namaSiswa; }
-        public void setNamaSiswa(String namaSiswa) { this.namaSiswa = namaSiswa; }
-        public Double getNilai() { return nilai; }
-        public void setNilai(Double nilai) { this.nilai = nilai; }
-    }
-
     @GetMapping("/input/{komponenId}")
     public String showBulkInputForm(@PathVariable Long komponenId, Model model) {
-        model.addAttribute("komponenId", komponenId);
-        com.akamsi.entity.KomponenNilai kn = nilaiService.getKomponenByKelasAndMapel(null, null)
-                .stream().filter(k -> k.getId().equals(komponenId)).findFirst().orElse(null);
+        FormInputNilaiDTO form = nilaiService.getFormInputNilai(komponenId);
+        model.addAttribute("formNilai", form);
         
-        Long kelasId = 1L;
-        Long mapelId = 1L;
-        FormNilaiWrapper wrapper = new FormNilaiWrapper();
-        
-        model.addAttribute("formNilai", wrapper);
-        model.addAttribute("kelasId", kelasId);
-        model.addAttribute("mapelId", mapelId);
+        KomponenNilai komponen = nilaiService.getKomponenById(komponenId);
+        model.addAttribute("komponen", komponen);
         
         return "guru/nilai-input";
     }
 
     @PostMapping("/input/save")
-    public String submitBulkNilai(@RequestParam Long komponenId,
-                                  @RequestParam Long kelasId,
-                                  @RequestParam Long mapelId,
-                                  @RequestParam Map<String, String> formData,
-                                  RedirectAttributes ra) {
+    public String submitBulkNilai(@ModelAttribute FormInputNilaiDTO formNilai, RedirectAttributes ra) {
         try {
-            Map<Long, Double> nilaiMap = new HashMap<>();
-            formData.forEach((key, value) -> {
-                if (key.contains(".siswaId") && !value.isBlank()) {
-                    String prefix = key.replace(".siswaId", "");
-                    String scoreKey = prefix + ".nilai";
-                    if (formData.containsKey(scoreKey) && !formData.get(scoreKey).isBlank()) {
-                        nilaiMap.put(Long.valueOf(value), Double.valueOf(formData.get(scoreKey)));
-                    }
-                }
-            });
-            nilaiService.saveBulkNilaiSiswa(komponenId, nilaiMap);
+            nilaiService.saveBulkNilai(formNilai);
             ra.addFlashAttribute("success", "Nilai siswa berhasil disimpan.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/guru/nilai?kelasId=" + kelasId + "&mapelId=" + mapelId;
+        return "redirect:/guru/nilai?kelasId=" + formNilai.getKelasId() + "&mapelId=" + formNilai.getMapelId();
     }
 }

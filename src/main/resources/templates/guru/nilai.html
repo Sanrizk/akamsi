@@ -135,38 +135,39 @@
     </div>
 
     <!-- Add Component Modal -->
-    <div th:if="${selectedKelas != null and selectedMapel != null}" class="modal fade" id="modalTambahKomponen" tabindex="-1">
+    <div th:if="${selectedKelas != null and selectedMapel != null}" class="modal fade" id="modalTambahKomponen" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
+            <div class="modal-content">
                 <form th:action="@{/guru/nilai/komponen/add}" method="post">
-                    <input type="hidden" name="kelasId" th:value="${selectedKelas.id}">
-                    <input type="hidden" name="mapelId" th:value="${selectedMapel.id}">
+                    <!-- CRUCIAL: Bind active class and subject IDs -->
+                    <input type="hidden" name="kelasId" th:value="${selectedKelas.id}" />
+                    <input type="hidden" name="mapelId" th:value="${selectedMapel.id}" />
                     
-                    <div class="modal-header bg-light">
-                        <h5 class="modal-title fw-bold">Tambah Asesmen Baru</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Asesmen Baru</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Nama Asesmen</label>
-                            <input type="text" name="namaKomponen" class="form-control" placeholder="Contoh: Sumatif Bab 1" required>
+                            <label class="form-label fw-bold">Nama Asesmen</label>
+                            <input type="text" name="namaKomponen" class="form-control" placeholder="Contoh: Sumatif Bab 1 (Operasi Hitung)" required />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Kategori Penilaian</label>
+                            <label class="form-label fw-bold">Kategori Penilaian</label>
                             <select name="kategoriNilai" class="form-select" required>
-                                <option value="HARIAN">Harian / Sumatif Lingkup Materi</option>
+                                <option value="HARIAN">Penilaian Harian / Sumatif Lingkup Materi</option>
                                 <option value="TENGAH_SEMESTER">Penilaian Tengah Semester (PTS)</option>
-                                <option value="AKHIR_SEMESTER">Penilaian Akhir Semester (PAS)</option>
+                                <option value="AKHIR_SEMESTER">Penilaian Akhir Semester (PAS / SAS)</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Tujuan Pembelajaran / Deskripsi</label>
-                            <textarea name="deskripsiTujuanPembelajaran" class="form-control" rows="3" placeholder="Deskripsi asesmen..."></textarea>
+                            <label class="form-label fw-bold">Tujuan Pembelajaran / Keterangan</label>
+                            <textarea name="deskripsiTujuanPembelajaran" class="form-control" rows="3" placeholder="Deskripsi materi atau TP yang dinilai..."></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light border-0">
+                    <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary px-4">Simpan Asesmen</button>
+                        <button type="submit" class="btn btn-primary">Simpan Asesmen</button>
                     </div>
                 </form>
             </div>

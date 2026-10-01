@@ -10,4 +10,5 @@ import java.util.List;
 public interface NilaiSiswaRepository extends JpaRepository<NilaiSiswa, Long> {
     List<NilaiSiswa> findByKomponenNilaiId(Long komponenNilaiId);
     List<NilaiSiswa> findBySiswaId(Long siswaId);
+    java.util.Optional<NilaiSiswa> findByKomponenNilaiIdAndSiswaId(Long komponenNilaiId, Long siswaId);
 }
