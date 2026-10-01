@@ -2,6 +2,7 @@ package com.akamsi.config;
 
 import com.akamsi.entity.*;
 import com.akamsi.repository.*;
+import java.time.LocalTime;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ public class DataSeeder implements CommandLineRunner {
     private final NilaiSiswaRepository nilaiSiswaRepository;
     private final RaporAkhirRepository raporAkhirRepository;
     private final PembayaranSPPRepository sppRepository;
+    private final JadwalPelajaranRepository jadwalPelajaranRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(UserRepository userRepository, GuruRepository guruRepository, 
@@ -29,7 +31,7 @@ public class DataSeeder implements CommandLineRunner {
                       MataPelajaranRepository mapelRepository, KurikulumRepository kurikulumRepository,
                       KomponenNilaiRepository komponenNilaiRepository, NilaiSiswaRepository nilaiSiswaRepository,
                       RaporAkhirRepository raporAkhirRepository, PembayaranSPPRepository sppRepository, 
-                      PasswordEncoder passwordEncoder) {
+                      JadwalPelajaranRepository jadwalPelajaranRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.guruRepository = guruRepository;
         this.kelasRepository = kelasRepository;
@@ -40,6 +42,7 @@ public class DataSeeder implements CommandLineRunner {
         this.nilaiSiswaRepository = nilaiSiswaRepository;
         this.raporAkhirRepository = raporAkhirRepository;
         this.sppRepository = sppRepository;
+        this.jadwalPelajaranRepository = jadwalPelajaranRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -135,6 +138,22 @@ public class DataSeeder implements CommandLineRunner {
                 spp.setStatus(StatusPembayaran.BELUM_LUNAS);
                 sppRepository.save(spp);
             }
+
+            MataPelajaran bIndo = allMapel.get(1);
+            MataPelajaran pancasila = allMapel.get(2);
+
+            JadwalPelajaran j1 = new JadwalPelajaran(null, guru1, kelas1A, mtk, Hari.SENIN, LocalTime.of(7, 30), LocalTime.of(9, 0));
+            JadwalPelajaran j2 = new JadwalPelajaran(null, guru1, kelas1A, bIndo, Hari.SELASA, LocalTime.of(7, 30), LocalTime.of(9, 0));
+            JadwalPelajaran j3 = new JadwalPelajaran(null, guru1, kelas4A, mtk, Hari.RABU, LocalTime.of(8, 0), LocalTime.of(9, 30));
+            
+            JadwalPelajaran j4 = new JadwalPelajaran(null, guru2, kelas1A, pancasila, Hari.KAMIS, LocalTime.of(7, 30), LocalTime.of(9, 0));
+            JadwalPelajaran j5 = new JadwalPelajaran(null, guru2, kelas4A, pancasila, Hari.JUMAT, LocalTime.of(7, 30), LocalTime.of(8, 45));
+
+            jadwalPelajaranRepository.save(j1);
+            jadwalPelajaranRepository.save(j2);
+            jadwalPelajaranRepository.save(j3);
+            jadwalPelajaranRepository.save(j4);
+            jadwalPelajaranRepository.save(j5);
 
             KomponenNilai sumatif1 = new KomponenNilai();
             sumatif1.setKelas(kelas1A);

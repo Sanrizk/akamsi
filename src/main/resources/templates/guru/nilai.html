@@ -12,11 +12,11 @@
 
     <!-- Flash Messages -->
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}">Success Message</span>
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}">Error Message</span>
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
@@ -29,7 +29,7 @@
             <form th:action="@{/guru/nilai}" method="get" class="row g-3 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label small fw-semibold">Pilih Kelas</label>
-                    <select name="kelasId" class="form-select" required>
+                    <select id="selectKelas" name="kelasId" class="form-select" required>
                         <option value="" disabled th:selected="${selectedKelas == null}">-- Pilih Kelas --</option>
                         <option th:each="k : ${kelasList}" 
                                 th:value="${k.id}" 
@@ -39,9 +39,9 @@
                 </div>
                 <div class="col-md-5">
                     <label class="form-label small fw-semibold">Pilih Mata Pelajaran</label>
-                    <select name="mapelId" class="form-select" required>
+                    <select id="selectMapel" name="mapelId" class="form-select" required th:disabled="${mapelList == null}">
                         <option value="" disabled th:selected="${selectedMapel == null}">-- Pilih Mapel --</option>
-                        <option th:each="m : ${mapelList}" 
+                        <option th:if="${mapelList != null}" th:each="m : ${mapelList}" 
                                 th:value="${m.id}" 
                                 th:text="${m.namaMapel}"
                                 th:selected="${selectedMapel != null and selectedMapel.id == m.id}"></option>
@@ -62,12 +62,12 @@
             <div>
                 <h5 class="mb-1 fw-bold">
                     Komponen Penilaian: 
-                    <span class="text-primary" th:text="${selectedMapel.namaMapel}">Mapel</span> - 
-                    <span class="text-secondary" th:text="${selectedKelas.namaKelas}">Kelas</span>
+                    <span class="text-primary" th:text="${selectedMapel.namaMapel}"></span> - 
+                    <span class="text-secondary" th:text="${selectedKelas.namaKelas}"></span>
                 </h5>
                 <span class="badge bg-info text-dark bg-opacity-10 border border-info border-opacity-25 rounded-pill px-3 py-1 mt-1">
                     <i class="bi bi-journal-bookmark-fill me-1"></i> 
-                    <span th:text="${selectedKelas.kurikulum != null ? selectedKelas.kurikulum.namaKurikulum : 'Kurikulum Standar'}">Kurikulum</span>
+                    <span th:text="${selectedKelas.kurikulum != null ? selectedKelas.kurikulum.namaKurikulum : 'Kurikulum Standar'}"></span>
                 </span>
             </div>
             <div class="d-flex gap-2">
@@ -100,14 +100,14 @@
                     </thead>
                     <tbody>
                         <tr th:each="komp, iter : ${komponenList}">
-                            <td class="ps-4 text-muted" th:text="${iter.count}">1</td>
-                            <td class="fw-bold text-dark" th:text="${komp.namaKomponen}">Nama Komponen</td>
+                            <td class="ps-4 text-muted" th:text="${iter.count}"></td>
+                            <td class="fw-bold text-dark" th:text="${komp.namaKomponen}"></td>
                             <td>
                                 <span th:if="${komp.kategoriNilai.name() == 'HARIAN'}" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3">HARIAN</span>
                                 <span th:if="${komp.kategoriNilai.name() == 'TENGAH_SEMESTER'}" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3">PTS</span>
                                 <span th:if="${komp.kategoriNilai.name() == 'AKHIR_SEMESTER'}" class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3">PAS</span>
                             </td>
-                            <td class="text-muted small" th:text="${komp.deskripsiTujuanPembelajaran != null ? komp.deskripsiTujuanPembelajaran : '-'}">Tujuan</td>
+                            <td class="text-muted small" th:text="${komp.deskripsiTujuanPembelajaran != null ? komp.deskripsiTujuanPembelajaran : '-'}"></td>
                             <td class="pe-4 text-end text-nowrap">
                                 <a th:href="@{/guru/nilai/input/{id}(id=${komp.id})}" class="btn btn-sm btn-outline-success me-1 shadow-sm" title="Input Nilai">
                                     <i class="bi bi-pencil-square me-1"></i>Input Nilai
@@ -173,6 +173,45 @@
         </div>
     </div>
 
+    <!-- Client-Side Script for Cascading Dropdown -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectKelas = document.getElementById('selectKelas');
+            const selectMapel = document.getElementById('selectMapel');
+
+            if (selectKelas && selectMapel) {
+                selectKelas.addEventListener('change', function() {
+                    const kelasId = this.value;
+                    if (!kelasId) return;
+
+                    selectMapel.disabled = true;
+                    selectMapel.innerHTML = '<option value="" disabled selected>-- Memuat Mapel... --</option>';
+
+                    fetch('/guru/nilai/api/mapel-by-kelas?kelasId=' + kelasId)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            selectMapel.innerHTML = '<option value="" disabled selected>-- Pilih Mapel --</option>';
+                            data.forEach(mapel => {
+                                const option = document.createElement('option');
+                                option.value = mapel.id;
+                                option.textContent = mapel.namaMapel;
+                                selectMapel.appendChild(option);
+                            });
+                            selectMapel.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching mapel:', error);
+                            selectMapel.innerHTML = '<option value="" disabled selected>-- Gagal memuat data --</option>';
+                        });
+                });
+            }
+        });
+    </script>
 </div>
 </body>
 </html>

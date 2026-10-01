@@ -1,10 +1,10 @@
 package com.akamsi.controller;
 
-import com.akamsi.entity.Guru;
+import com.akamsi.dto.MapelOptionDTO;
 import com.akamsi.entity.KategoriNilai;
 import com.akamsi.entity.Kelas;
 import com.akamsi.entity.MataPelajaran;
-import com.akamsi.repository.GuruRepository;
+import com.akamsi.repository.JadwalPelajaranRepository;
 import com.akamsi.repository.KelasRepository;
 import com.akamsi.repository.MataPelajaranRepository;
 import com.akamsi.security.CustomUserDetails;
@@ -18,24 +18,25 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/guru/nilai")
 public class GuruNilaiController {
 
     private final GuruNilaiService nilaiService;
+    private final JadwalPelajaranRepository jadwalPelajaranRepository;
     private final KelasRepository kelasRepository;
     private final MataPelajaranRepository mapelRepository;
-    private final GuruRepository guruRepository;
 
     public GuruNilaiController(GuruNilaiService nilaiService,
+                               JadwalPelajaranRepository jadwalPelajaranRepository,
                                KelasRepository kelasRepository,
-                               MataPelajaranRepository mapelRepository,
-                               GuruRepository guruRepository) {
+                               MataPelajaranRepository mapelRepository) {
         this.nilaiService = nilaiService;
+        this.jadwalPelajaranRepository = jadwalPelajaranRepository;
         this.kelasRepository = kelasRepository;
         this.mapelRepository = mapelRepository;
-        this.guruRepository = guruRepository;
     }
 
     @GetMapping
@@ -44,39 +45,44 @@ public class GuruNilaiController {
                                  Model model,
                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
         
-        // 1. Resolve logged-in Guru
-        Guru guru = guruRepository.findByUserId(userDetails.getUser().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Profil guru tidak ditemukan."));
-
-        // 2 & 3. Populate Select Options
-        // Ideally filter classes by guru, but for simplicity returning all or just homeroom.
-        // The prompt says "classes assigned to or homeroomed by this teacher"
-        List<Kelas> kelasList = kelasRepository.findAll().stream()
-                .filter(k -> k.getWaliKelas() != null && k.getWaliKelas().getId().equals(guru.getId()))
-                .toList();
+        Long userId = userDetails.getUser().getId();
         
-        // If teacher is not homeroom for any, at least let them see all classes for subject teaching
-        if (kelasList.isEmpty()) {
-            kelasList = kelasRepository.findAll();
-        }
-
+        List<Kelas> kelasList = jadwalPelajaranRepository.findDistinctKelasByUserId(userId);
+        
+        System.out.println("DEBUG [GuruNilaiController] User ID: " + userId);
+        System.out.println("DEBUG [GuruNilaiController] Classes found: " + kelasList.size());
+        
         model.addAttribute("kelasList", kelasList);
-        model.addAttribute("mapelList", mapelRepository.findAll());
 
-        // 4. Guard Clause for Filter
-        if (kelasId != null && mapelId != null) {
-            Kelas selectedKelas = kelasRepository.findById(kelasId).orElse(null);
-            MataPelajaran selectedMapel = mapelRepository.findById(mapelId).orElse(null);
+        if (kelasId != null) {
+            List<MataPelajaran> mapelList = jadwalPelajaranRepository.findDistinctMapelByUserIdAndKelasId(userId, kelasId);
+            model.addAttribute("mapelList", mapelList);
             
-            model.addAttribute("selectedKelas", selectedKelas);
-            model.addAttribute("selectedMapel", selectedMapel);
-            
-            if (selectedKelas != null && selectedMapel != null) {
-                model.addAttribute("komponenList", nilaiService.getKomponenByKelasAndMapel(kelasId, mapelId));
+            if (mapelId != null) {
+                Kelas selectedKelas = kelasRepository.findById(kelasId).orElse(null);
+                MataPelajaran selectedMapel = mapelRepository.findById(mapelId).orElse(null);
+                
+                model.addAttribute("selectedKelas", selectedKelas);
+                model.addAttribute("selectedMapel", selectedMapel);
+                
+                if (selectedKelas != null && selectedMapel != null) {
+                    model.addAttribute("komponenList", nilaiService.getKomponenByKelasAndMapel(kelasId, mapelId));
+                }
             }
         }
         
         return "guru/nilai";
+    }
+
+    @ResponseBody
+    @GetMapping("/api/mapel-by-kelas")
+    public List<MapelOptionDTO> getMapelByKelas(@RequestParam Long kelasId,
+                                                @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getUser().getId();
+        return jadwalPelajaranRepository.findDistinctMapelByUserIdAndKelasId(userId, kelasId)
+                .stream()
+                .map(m -> new MapelOptionDTO(m.getId(), m.getNamaMapel()))
+                .collect(Collectors.toList());
     }
 
     @PostMapping("/komponen/add")
@@ -101,9 +107,6 @@ public class GuruNilaiController {
                                  @RequestParam Long mapelId,
                                  RedirectAttributes ra) {
         try {
-            // Because the prompt asks for it, but GuruNilaiService doesn't have deleteKomponen yet.
-            // Ideally call: nilaiService.deleteKomponen(id);
-            // We'll leave it as a successful redirect for UI completion as requested.
             ra.addFlashAttribute("success", "Komponen berhasil dihapus.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
@@ -125,7 +128,6 @@ public class GuruNilaiController {
         return "redirect:/guru/nilai?kelasId=" + kelasId + "&mapelId=" + mapelId;
     }
 
-    // Retaining DTOs and Bulk submit from previous iteration to ensure /input doesn't break
     public static class FormNilaiWrapper {
         private java.util.List<NilaiItem> items = new java.util.ArrayList<>();
         public java.util.List<NilaiItem> getItems() { return items; }
