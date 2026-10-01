@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/base :: layout('Manajemen Jadwal Pelajaran', ~{::content})}">
+<body>
+<div th:fragment="content">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Manajemen Jadwal Pelajaran</h3>
+            <p class="text-muted mb-0">Kelola pemetaan guru, kelas, mata pelajaran, dan waktu.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambahJadwal">
+                <i class="bi bi-plus-circle me-1"></i> Tambah Jadwal
+            </button>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-funnel text-primary me-2"></i>Filter Jadwal Kelas</h5>
+        </div>
+        <div class="card-body bg-light">
+            <form th:action="@{/admin/akademik/jadwal}" method="get" class="row g-3 align-items-end">
+                <div class="col-md-10">
+                    <label class="form-label small fw-semibold">Pilih Kelas</label>
+                    <select name="kelasId" class="form-select" required>
+                        <option value="" disabled th:selected="${selectedKelasId == null}">-- Pilih Kelas --</option>
+                        <option th:each="k : ${kelasList}" 
+                                th:value="${k.id}" 
+                                th:text="${k.namaKelas}"
+                                th:selected="${selectedKelasId != null and selectedKelasId == k.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                        <i class="bi bi-search me-1"></i> Tampilkan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${selectedKelasId == null}">
+        <div class="alert alert-info text-center border-0 shadow-sm py-4">
+            <i class="bi bi-info-circle me-2"></i> Silakan pilih Kelas terlebih dahulu untuk melihat jadwal pelajaran.
+        </div>
+    </div>
+
+    <!-- Responsive Table -->
+    <div th:if="${selectedKelasId != null}" class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Jadwal: <span class="text-primary" th:text="${selectedKelas.namaKelas}"></span></h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>Hari</th>
+                            <th>Jam</th>
+                            <th>Guru</th>
+                            <th>Mata Pelajaran</th>
+                            <th class="pe-4 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="j, iter : ${jadwalList}">
+                            <td class="ps-4 text-muted" th:text="${iter.count}"></td>
+                            <td class="fw-bold text-dark" th:text="${j.hari.name()}"></td>
+                            <td><span th:text="${j.jamMulai}"></span> - <span th:text="${j.jamSelesai}"></span></td>
+                            <td th:text="${j.guru.user.namaLengkap}"></td>
+                            <td class="text-primary fw-medium" th:text="${j.mapel.namaMapel}"></td>
+                            <td class="pe-4 text-end text-nowrap">
+                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-jadwal"
+                                        th:data-id="${j.id}"
+                                        th:data-guru="${j.guru.id}"
+                                        th:data-kelas="${j.kelas.id}"
+                                        th:data-mapel="${j.mapel.id}"
+                                        th:data-hari="${j.hari.name()}"
+                                        th:data-mulai="${j.jamMulai}"
+                                        th:data-selesai="${j.jamSelesai}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                
+                                <form th:action="@{/admin/akademik/jadwal/delete/{id}(id=${j.id})}" method="post" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus jadwal ini?');">
+                                    <input type="hidden" name="kelasId" th:value="${selectedKelasId}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus Jadwal">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${jadwalList == null or jadwalList.isEmpty()}">
+                            <td colspan="6" class="text-center py-5 text-muted">Belum ada data jadwal pelajaran untuk kelas ini.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah Jadwal -->
+    <div class="modal fade" id="modalTambahJadwal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <form th:action="@{/admin/akademik/jadwal/add}" method="post">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Tambah Jadwal Baru</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Guru Pengajar</label>
+                                <select name="guruId" class="form-select" required>
+                                    <option value="" disabled selected>-- Pilih Guru --</option>
+                                    <option th:each="g : ${guruList}" th:value="${g.id}" th:text="${g.user.namaLengkap}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Kelas</label>
+                                <select name="kelasId" class="form-select" required>
+                                    <option value="" disabled th:selected="${selectedKelasId == null}">-- Pilih Kelas --</option>
+                                    <option th:each="k : ${kelasList}" th:value="${k.id}" th:text="${k.namaKelas}" th:selected="${selectedKelasId != null and selectedKelasId == k.id}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-semibold">Mata Pelajaran</label>
+                                <select name="mapelId" class="form-select" required>
+                                    <option value="" disabled selected>-- Pilih Mata Pelajaran --</option>
+                                    <option th:each="m : ${mapelList}" th:value="${m.id}" th:text="${m.namaMapel}"></option>
+                                </select>
+                            </div>
+                            <hr class="my-3 col-12">
+                            <h6 class="fw-bold mb-2">Waktu Pelajaran</h6>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Hari</label>
+                                <select name="hari" class="form-select" required>
+                                    <option value="" disabled selected>-- Pilih Hari --</option>
+                                    <option th:each="h : ${hariList}" th:value="${h.name()}" th:text="${h.name()}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Jam Mulai</label>
+                                <input type="time" name="jamMulai" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Jam Selesai</label>
+                                <input type="time" name="jamSelesai" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4">Simpan Jadwal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Jadwal -->
+    <div class="modal fade" id="modalEditJadwal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <form id="formEditJadwal" method="post">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Edit Jadwal Pelajaran</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Guru Pengajar</label>
+                                <select name="guruId" id="editGuru" class="form-select" required>
+                                    <option th:each="g : ${guruList}" th:value="${g.id}" th:text="${g.user.namaLengkap}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Kelas</label>
+                                <select name="kelasId" id="editKelas" class="form-select" required>
+                                    <option th:each="k : ${kelasList}" th:value="${k.id}" th:text="${k.namaKelas}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-semibold">Mata Pelajaran</label>
+                                <select name="mapelId" id="editMapel" class="form-select" required>
+                                    <option th:each="m : ${mapelList}" th:value="${m.id}" th:text="${m.namaMapel}"></option>
+                                </select>
+                            </div>
+                            <hr class="my-3 col-12">
+                            <h6 class="fw-bold mb-2">Waktu Pelajaran</h6>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Hari</label>
+                                <select name="hari" id="editHari" class="form-select" required>
+                                    <option th:each="h : ${hariList}" th:value="${h.name()}" th:text="${h.name()}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Jam Mulai</label>
+                                <input type="time" name="jamMulai" id="editMulai" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Jam Selesai</label>
+                                <input type="time" name="jamSelesai" id="editSelesai" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4">Update Jadwal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client-side Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButtons = document.querySelectorAll('.btn-edit-jadwal');
+            const formEdit = document.getElementById('formEditJadwal');
+            
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    
+                    document.getElementById('editGuru').value = this.getAttribute('data-guru');
+                    document.getElementById('editKelas').value = this.getAttribute('data-kelas');
+                    document.getElementById('editMapel').value = this.getAttribute('data-mapel');
+                    document.getElementById('editHari').value = this.getAttribute('data-hari');
+                    document.getElementById('editMulai').value = this.getAttribute('data-mulai');
+                    document.getElementById('editSelesai').value = this.getAttribute('data-selesai');
+                    
+                    formEdit.action = '/admin/akademik/jadwal/edit/' + id;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('modalEditJadwal'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+</div>
+</body>
+</html>
