@@ -20,15 +20,26 @@ public class SppService {
         return sppRepository.findAll();
     }
 
+    public PembayaranSPP findById(Long id) {
+        return sppRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Data SPP tidak ditemukan"));
+    }
+
     public void processManualPayment(Long pembayaranId, User admin, String catatan) {
-        PembayaranSPP spp = sppRepository.findById(pembayaranId)
-            .orElseThrow(() -> new IllegalArgumentException("Data pembayaran tidak ditemukan!"));
-            
+        PembayaranSPP spp = findById(pembayaranId);
         spp.setStatus(StatusPembayaran.LUNAS);
         spp.setTanggalBayar(LocalDate.now());
-        spp.setAdmin(admin); // records the admin_id automatically via JPA relation
+        spp.setAdmin(admin);
         spp.setCatatan(catatan);
-        
+        sppRepository.save(spp);
+    }
+
+    public void voidPayment(Long id) {
+        PembayaranSPP spp = findById(id);
+        spp.setStatus(StatusPembayaran.BELUM_LUNAS);
+        spp.setTanggalBayar(null);
+        spp.setAdmin(null);
+        spp.setCatatan("Dibatalkan");
         sppRepository.save(spp);
     }
 }

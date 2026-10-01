@@ -20,12 +20,27 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    public User findById(Long id) {
+        return userRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("User tidak ditemukan"));
+    }
+
     public void saveUser(User user) {
-        // Hash password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
-    
+
+    public void updateUser(Long id, String username, String namaLengkap, String role, String password) {
+        User user = findById(id);
+        user.setUsername(username);
+        user.setNamaLengkap(namaLengkap);
+        user.setRole(com.akamsi.entity.Role.valueOf(role));
+        if (password != null && !password.isEmpty()) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+        userRepository.save(user);
+    }
+
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }

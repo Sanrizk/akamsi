@@ -1,51 +1,77 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>AKAMSI - SPP Payment History</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AKAMSI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/admin/users">Users</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/akademik/kelas">Kelas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/akademik/mapel">Mapel</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/spp">SPP</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-light btn-sm mt-1" type="submit">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<html th:replace="~{layout/base :: layout('Pembayaran SPP', ~{::content})}">
+<head></head>
+<body>
+    <div th:fragment="content">
 
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">SPP Payment History</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Welcome to the SPP Payment History module for AKAMSI.</p>
-                
-                <!-- TODO: Insert specific tables, forms, and data iterations here -->
-                
+        <!-- Page Title -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Pembayaran SPP</h3>
+                <p class="text-muted mb-0">Riwayat dan kelola tagihan SPP siswa.</p>
             </div>
         </div>
+
+        <!-- Table -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Siswa</th>
+                                <th>Bulan</th>
+                                <th>Tahun</th>
+                                <th>Jumlah</th>
+                                <th>Status</th>
+                                <th class="pe-4 text-end">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="s : ${sppList}">
+                                <td class="ps-4" th:text="${s.id}"></td>
+                                <td class="fw-semibold" th:text="${s.siswa.namaSiswa}"></td>
+                                <td th:text="${s.bulan}"></td>
+                                <td th:text="${s.tahun}"></td>
+                                <td th:text="'Rp ' + ${s.jumlahBayar}"></td>
+                                <td>
+                                    <span th:if="${s.status.name() == 'LUNAS'}"
+                                          class="badge rounded-pill bg-success bg-opacity-10 text-success px-3 py-2">
+                                        <i class="bi bi-check-circle me-1"></i>LUNAS
+                                    </span>
+                                    <span th:if="${s.status.name() == 'BELUM_LUNAS'}"
+                                          class="badge rounded-pill bg-warning bg-opacity-10 text-warning px-3 py-2">
+                                        <i class="bi bi-clock me-1"></i>BELUM LUNAS
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <!-- Pay Button (only if BELUM_LUNAS) -->
+                                    <form th:if="${s.status.name() == 'BELUM_LUNAS'}"
+                                          th:action="@{/admin/spp/pay}" method="post" class="d-inline">
+                                        <input type="hidden" name="pembayaranId" th:value="${s.id}">
+                                        <input type="hidden" name="catatan" value="Pembayaran manual">
+                                        <button type="submit" class="btn btn-sm btn-success"
+                                                onclick="return confirm('Tandai LUNAS?')">
+                                            <i class="bi bi-check2-circle me-1"></i> Bayar
+                                        </button>
+                                    </form>
+                                    <!-- Void Button (only if LUNAS) -->
+                                    <form th:if="${s.status.name() == 'LUNAS'}"
+                                          th:action="@{/admin/spp/void/{id}(id=${s.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Batalkan pembayaran ini?')">
+                                            <i class="bi bi-x-circle me-1"></i> Void
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,56 +1,106 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>AKAMSI - Mata Pelajaran</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AKAMSI</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/admin/users">Users</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/akademik/kelas">Kelas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/akademik/mapel">Mapel</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/spp">SPP</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-light btn-sm mt-1" type="submit">Logout</button>
-                        </form>
-                    </li>
-                </ul>
+<html th:replace="~{layout/base :: layout('Mata Pelajaran', ~{::content})}">
+<head></head>
+<body>
+    <div th:fragment="content">
+
+        <!-- Page Title + Add Button -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Mata Pelajaran</h3>
+                <p class="text-muted mb-0">Kelola daftar mata pelajaran.</p>
+            </div>
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="bi bi-journal-plus me-2"></i>Tambah Mapel
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Nama Mata Pelajaran</th>
+                                <th class="pe-4 text-end">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="m : ${mapelList}">
+                                <td class="ps-4" th:text="${m.id}"></td>
+                                <td class="fw-semibold" th:text="${m.namaMapel}"></td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                                            th:data-bs-target="'#editModal' + ${m.id}">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </button>
+                                    <form th:action="@{/admin/akademik/mapel/delete/{id}(id=${m.id})}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Yakin hapus mapel ini?')">
+                                            <i class="bi bi-trash"></i> Hapus
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">Mata Pelajaran</h3>
+        <!-- ========== EDIT MODALS ========== -->
+        <div th:each="m : ${mapelList}">
+            <div class="modal fade" th:id="'editModal' + ${m.id}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content border-0 shadow">
+                        <form th:action="@{/admin/akademik/mapel/edit/{id}(id=${m.id})}" method="post">
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-bold">Edit Mata Pelajaran</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Nama Mapel</label>
+                                    <input type="text" name="namaMapel" class="form-control" th:value="${m.namaMapel}" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Nama Mapel</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="mapel : ${mapelList}">
-                            <td th:text="${mapel.id}"></td>
-                            <td th:text="${mapel.namaMapel}"></td>
-                        </tr>
-                    </tbody>
-                </table>
+        </div>
+
+    </div>
+
+    <!-- ========== ADD MODAL ========== -->
+    <div class="modal fade" id="addModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <form th:action="@{/admin/akademik/mapel/add}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Tambah Mata Pelajaran</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Nama Mapel</label>
+                            <input type="text" name="namaMapel" class="form-control" placeholder="contoh: Matematika" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Tambah</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+
 </body>
 </html>

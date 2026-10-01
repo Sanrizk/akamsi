@@ -1,0 +1,31 @@
+<div th:fragment="sidebar" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" id="sidebar-wrapper" class="d-flex flex-column sticky-top" style="height: 100vh;">
+    <div class="p-4 d-flex align-items-center border-bottom">
+        <div class="bg-primary text-white rounded p-2 me-3 d-flex align-items-center justify-content-center" style="width:40px; height:40px;">
+            <i class="bi bi-mortarboard-fill fs-5"></i>
+        </div>
+        <div>
+            <h5 class="mb-0 fw-bold text-dark">AKAMSI</h5>
+            <small class="text-muted" style="font-size: 0.75rem;">Portal Akademik</small>
+        </div>
+    </div>
+    <div class="p-3 flex-grow-1 overflow-auto">
+        <ul class="nav nav-pills flex-column gap-1">
+            <div sec:authorize="hasRole('ADMIN')">
+                <li class="nav-item"><a href="/admin/users" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-people-fill me-3"></i> Kelola Users</a></li>
+                <li class="nav-item"><a href="/admin/akademik/kelas" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-door-open-fill me-3"></i> Kelas</a></li>
+                <li class="nav-item"><a href="/admin/akademik/mapel" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-book-half me-3"></i> Mata Pelajaran</a></li>
+                <li class="nav-item"><a href="/admin/spp" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-wallet2 me-3"></i> Pembayaran SPP</a></li>
+            </div>
+            <div sec:authorize="hasRole('GURU')">
+                <li class="nav-item"><a href="/guru/presensi" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-calendar-check-fill me-3"></i> Presensi</a></li>
+                <li class="nav-item"><a href="/guru/nilai" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-journal-text me-3"></i> Input Nilai</a></li>
+            </div>
+            <div sec:authorize="hasRole('SISWA')">
+                <li class="nav-item"><a href="/siswa/dashboard" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-person-vcard-fill me-3"></i> Dashboard</a></li>
+                <li class="nav-item"><a href="/siswa/presensi" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-calendar-range me-3"></i> Presensi</a></li>
+                <li class="nav-item"><a href="/siswa/rapor" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-award-fill me-3"></i> Rapor</a></li>
+                <li class="nav-item"><a href="/siswa/spp" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-receipt me-3"></i> SPP</a></li>
+            </div>
+        </ul>
+    </div>
+</div>
