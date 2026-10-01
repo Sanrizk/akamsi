@@ -24,18 +24,22 @@ public class RaporAkhir {
     @Column(name = "nilai_akhir", nullable = false)
     private Double nilaiAkhir;
 
+    @Column(name = "predikat", length = 5)
+    private String predikat;
+
     @Column(name = "deskripsi_capaian", length = 1000)
     private String deskripsiCapaian;
 
     public RaporAkhir() {}
 
     public RaporAkhir(Long id, Siswa siswa, MataPelajaran mapel, Integer semester, 
-                      Double nilaiAkhir, String deskripsiCapaian) {
+                      Double nilaiAkhir, String predikat, String deskripsiCapaian) {
         this.id = id;
         this.siswa = siswa;
         this.mapel = mapel;
         this.semester = semester;
         this.nilaiAkhir = nilaiAkhir;
+        this.predikat = predikat;
         this.deskripsiCapaian = deskripsiCapaian;
     }
 
@@ -49,6 +53,8 @@ public class RaporAkhir {
     public void setSemester(Integer semester) { this.semester = semester; }
     public Double getNilaiAkhir() { return nilaiAkhir; }
     public void setNilaiAkhir(Double nilaiAkhir) { this.nilaiAkhir = nilaiAkhir; }
+    public String getPredikat() { return predikat; }
+    public void setPredikat(String predikat) { this.predikat = predikat; }
     public String getDeskripsiCapaian() { return deskripsiCapaian; }
     public void setDeskripsiCapaian(String deskripsiCapaian) { this.deskripsiCapaian = deskripsiCapaian; }
 }
