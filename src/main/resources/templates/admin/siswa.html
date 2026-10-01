@@ -37,26 +37,24 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">No</th>
-                            <th>NISN</th>
+                            <th>NISN / Username</th>
                             <th>Nama Siswa</th>
                             <th>L/P</th>
                             <th>Kelas</th>
                             <th>Nama Orang Tua</th>
                             <th>No. HP</th>
-                            <th>Username</th>
                             <th class="pe-4 text-end">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="s, iter : ${siswaList}">
                             <td class="ps-4 text-muted" th:text="${iter.count}"></td>
-                            <td class="fw-medium text-secondary" th:text="${s.nisn}"></td>
+                            <td class="fw-medium text-primary" th:text="${s.nisn}"></td>
                             <td class="fw-bold text-dark" th:text="${s.namaSiswa}"></td>
                             <td th:text="${s.jenisKelamin}"></td>
                             <td th:text="${s.kelas != null ? s.kelas.namaKelas : '-'}"></td>
                             <td th:text="${s.namaOrangTua}"></td>
                             <td th:text="${s.noHpOrangTua}"></td>
-                            <td th:text="${s.user != null ? s.user.username : '-'}"></td>
                             <td class="pe-4 text-end text-nowrap">
                                 <button class="btn btn-sm btn-outline-primary me-1 btn-edit-siswa"
                                         th:data-id="${s.id}"
@@ -65,8 +63,7 @@
                                         th:data-jk="${s.jenisKelamin}"
                                         th:data-kelas="${s.kelas != null ? s.kelas.id : ''}"
                                         th:data-ortu="${s.namaOrangTua}"
-                                        th:data-hp="${s.noHpOrangTua}"
-                                        th:data-username="${s.user != null ? s.user.username : ''}">
+                                        th:data-hp="${s.noHpOrangTua}">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
                                 
@@ -78,7 +75,7 @@
                             </td>
                         </tr>
                         <tr th:if="${siswaList == null or siswaList.isEmpty()}">
-                            <td colspan="9" class="text-center py-5 text-muted">Belum ada data siswa.</td>
+                            <td colspan="8" class="text-center py-5 text-muted">Belum ada data siswa.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -96,6 +93,11 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        
+                        <div class="alert alert-info py-2 small mb-3">
+                            <i class="bi bi-info-circle me-1"></i> Akun login siswa dibuat otomatis: <strong>Username = NISN</strong> dan <strong>Password default = No. HP Orang Tua</strong>.
+                        </div>
+
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">NISN</label>
@@ -126,17 +128,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">No. HP Orang Tua</label>
-                                <input type="text" name="noHpOrangTua" class="form-control">
-                            </div>
-                            <hr class="my-3 col-12">
-                            <h6 class="fw-bold mb-2">Informasi Akun Login</h6>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Username Akun</label>
-                                <input type="text" name="username" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Password Akun</label>
-                                <input type="password" name="password" class="form-control" required>
+                                <input type="text" name="noHpOrangTua" class="form-control" placeholder="Kosongkan jika tidak ada">
                             </div>
                         </div>
                     </div>
@@ -161,7 +153,7 @@
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">NISN</label>
+                                <label class="form-label small fw-semibold">NISN (juga sebagai Username)</label>
                                 <input type="text" name="nisn" id="editNisn" class="form-control" required>
                             </div>
                             <div class="col-md-6">
@@ -190,14 +182,10 @@
                                 <input type="text" name="noHpOrangTua" id="editHp" class="form-control">
                             </div>
                             <hr class="my-3 col-12">
-                            <h6 class="fw-bold mb-2">Informasi Akun Login</h6>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Username Akun</label>
-                                <input type="text" name="username" id="editUsername" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Password (Kosongkan jika tidak diubah)</label>
-                                <input type="password" name="password" class="form-control">
+                            <h6 class="fw-bold mb-2">Keamanan Akun</h6>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Password Baru (Kosongkan jika tidak ingin mereset password)</label>
+                                <input type="password" name="password" class="form-control" placeholder="Masukkan password baru">
                             </div>
                         </div>
                     </div>
@@ -226,7 +214,6 @@
                     document.getElementById('editKelas').value = this.getAttribute('data-kelas');
                     document.getElementById('editOrtu').value = this.getAttribute('data-ortu');
                     document.getElementById('editHp').value = this.getAttribute('data-hp');
-                    document.getElementById('editUsername').value = this.getAttribute('data-username');
                     
                     formEdit.action = '/admin/siswa/edit/' + id;
                     

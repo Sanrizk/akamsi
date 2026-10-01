@@ -2,38 +2,30 @@ package com.akamsi.dto;
 
 public class SiswaFormDTO {
     private Long id;
-    private String username;
-    private String password;
     private String nisn;
     private String namaSiswa;
     private String jenisKelamin;
     private String namaOrangTua;
     private String noHpOrangTua;
     private Long kelasId;
+    private String password;
 
     public SiswaFormDTO() {}
 
-    public SiswaFormDTO(Long id, String username, String password, String nisn, String namaSiswa, 
-                        String jenisKelamin, String namaOrangTua, String noHpOrangTua, Long kelasId) {
+    public SiswaFormDTO(Long id, String nisn, String namaSiswa, String jenisKelamin, 
+                        String namaOrangTua, String noHpOrangTua, Long kelasId, String password) {
         this.id = id;
-        this.username = username;
-        this.password = password;
         this.nisn = nisn;
         this.namaSiswa = namaSiswa;
         this.jenisKelamin = jenisKelamin;
         this.namaOrangTua = namaOrangTua;
         this.noHpOrangTua = noHpOrangTua;
         this.kelasId = kelasId;
+        this.password = password;
     }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
 
     public String getNisn() { return nisn; }
     public void setNisn(String nisn) { this.nisn = nisn; }
@@ -52,4 +44,7 @@ public class SiswaFormDTO {
 
     public Long getKelasId() { return kelasId; }
     public void setKelasId(Long kelasId) { this.kelasId = kelasId; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }

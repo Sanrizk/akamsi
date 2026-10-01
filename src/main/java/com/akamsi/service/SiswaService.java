@@ -42,19 +42,27 @@ public class SiswaService {
     }
 
     public void saveSiswa(SiswaFormDTO dto) {
-        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new RuntimeException("Username sudah digunakan.");
+        if (dto.getNisn() == null || dto.getNisn().trim().isEmpty()) {
+            throw new RuntimeException("NISN tidak boleh kosong.");
+        }
+        
+        String username = dto.getNisn().trim();
+
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new RuntimeException("NISN sudah terdaftar sebagai akun pengguna.");
         }
         
         boolean nisnExists = siswaRepository.findAll().stream()
-                .anyMatch(s -> s.getNisn().equals(dto.getNisn()));
+                .anyMatch(s -> s.getNisn().equals(username));
         if (nisnExists) {
-            throw new RuntimeException("NISN sudah terdaftar.");
+            throw new RuntimeException("NISN sudah terdaftar pada profil siswa.");
         }
 
+        String rawPassword = (dto.getNoHpOrangTua() != null && !dto.getNoHpOrangTua().isBlank()) ? dto.getNoHpOrangTua().trim() : "siswa123";
+
         User user = new User();
-        user.setUsername(dto.getUsername());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(rawPassword));
         user.setNamaLengkap(dto.getNamaSiswa());
         user.setRole(Role.SISWA);
         user.setCreatedAt(LocalDateTime.now());
@@ -66,7 +74,7 @@ public class SiswaService {
         Siswa siswa = new Siswa();
         siswa.setUser(user);
         siswa.setKelas(kelas);
-        siswa.setNisn(dto.getNisn());
+        siswa.setNisn(username);
         siswa.setNamaSiswa(dto.getNamaSiswa());
         siswa.setJenisKelamin(dto.getJenisKelamin());
         siswa.setNamaOrangTua(dto.getNamaOrangTua());
@@ -77,31 +85,34 @@ public class SiswaService {
     public void updateSiswa(Long id, SiswaFormDTO dto) {
         Siswa siswa = getSiswaById(id);
 
+        String newNisn = dto.getNisn().trim();
+
         boolean nisnConflict = siswaRepository.findAll().stream()
-                .anyMatch(s -> s.getNisn().equals(dto.getNisn()) && !s.getId().equals(id));
+                .anyMatch(s -> s.getNisn().equals(newNisn) && !s.getId().equals(id));
         if (nisnConflict) {
             throw new RuntimeException("NISN sudah terdaftar oleh siswa lain.");
         }
         
         User user = siswa.getUser();
         boolean usernameConflict = userRepository.findAll().stream()
-                .anyMatch(u -> u.getUsername().equals(dto.getUsername()) && !u.getId().equals(user.getId()));
+                .anyMatch(u -> u.getUsername().equals(newNisn) && !u.getId().equals(user.getId()));
         if (usernameConflict) {
-            throw new RuntimeException("Username sudah digunakan oleh user lain.");
+            throw new RuntimeException("NISN/Username sudah digunakan oleh user lain.");
         }
 
         Kelas kelas = kelasRepository.findById(dto.getKelasId())
                 .orElseThrow(() -> new RuntimeException("Kelas tidak ditemukan."));
 
-        siswa.setNisn(dto.getNisn());
+        siswa.setNisn(newNisn);
         siswa.setNamaSiswa(dto.getNamaSiswa());
         siswa.setJenisKelamin(dto.getJenisKelamin());
         siswa.setNamaOrangTua(dto.getNamaOrangTua());
         siswa.setNoHpOrangTua(dto.getNoHpOrangTua());
         siswa.setKelas(kelas);
 
+        user.setUsername(newNisn);
         user.setNamaLengkap(dto.getNamaSiswa());
-        user.setUsername(dto.getUsername());
+        
         if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
