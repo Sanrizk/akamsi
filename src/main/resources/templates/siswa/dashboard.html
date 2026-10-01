@@ -1,51 +1,69 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>AKAMSI - Siswa Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AKAMSI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/siswa/dashboard">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/siswa/presensi">Presensi</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/siswa/rapor">Rapor</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/siswa/spp">SPP</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-light btn-sm mt-1" type="submit">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<html th:replace="~{layout/base :: layout('Dashboard Siswa', ~{::content})}">
+<head></head>
+<body>
+    <div th:fragment="content">
 
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">Siswa Dashboard</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Welcome to the Siswa Dashboard module for AKAMSI.</p>
-                
-                <!-- TODO: Insert specific tables, forms, and data iterations here -->
-                
+        <!-- Student Profile Banner -->
+        <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="bg-primary text-white p-4">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="bg-white text-primary rounded-circle d-flex justify-content-center align-items-center fs-1 fw-bold shadow" style="width: 80px; height: 80px;" th:text="${#strings.substring(siswa.namaSiswa,0,1)}"></div>
+                    <div>
+                        <h2 class="fw-bold mb-1" th:text="${siswa.namaSiswa}"></h2>
+                        <div class="d-flex gap-3 opacity-75">
+                            <span><i class="bi bi-person-badge me-1"></i>NISN: <span th:text="${siswa.nisn}"></span></span>
+                            <span><i class="bi bi-door-open-fill me-1"></i>Kelas: <span th:text="${siswa.kelas != null ? siswa.kelas.namaKelas : '-'}"></span></span>
+                            <span><i class="bi bi-person-video3 me-1"></i>Wali: <span th:text="${siswa.kelas != null and siswa.kelas.waliKelas != null ? siswa.kelas.waliKelas.user.namaLengkap : '-'}"></span></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Quick Actions -->
+            <div class="col-md-4">
+                <a href="/siswa/presensi" class="text-decoration-none">
+                    <div class="card shadow-sm border-0 h-100 bg-white hover-shadow transition">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-info bg-opacity-10 text-info rounded-circle d-inline-flex p-3 mb-3">
+                                <i class="bi bi-calendar-check-fill fs-2"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-1">Riwayat Kehadiran</h5>
+                            <p class="text-muted small mb-0">Lihat histori absensi harian</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/siswa/rapor" class="text-decoration-none">
+                    <div class="card shadow-sm border-0 h-100 bg-white hover-shadow transition">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex p-3 mb-3">
+                                <i class="bi bi-award-fill fs-2"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-1">Rapor Akademik</h5>
+                            <p class="text-muted small mb-0">Cek nilai akhir semester</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/siswa/spp" class="text-decoration-none">
+                    <div class="card shadow-sm border-0 h-100 bg-white hover-shadow transition">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex p-3 mb-3">
+                                <i class="bi bi-wallet2 fs-2"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-1">Tagihan SPP</h5>
+                            <p class="text-muted small mb-0">Status pembayaran bulanan</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

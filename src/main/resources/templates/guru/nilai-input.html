@@ -1,49 +1,100 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>AKAMSI - Grade Input</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AKAMSI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/guru/presensi">Presensi</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/guru/nilai">Nilai</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-light btn-sm mt-1" type="submit">Logout</button>
+<html th:replace="~{layout/base :: layout('Input Nilai', ~{::content})}">
+<head></head>
+<body>
+    <div th:fragment="content">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Input Nilai Akademik</h3>
+                <p class="text-muted mb-0">Kelola nilai Tugas, UTS, dan UAS siswa.</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Daftar Siswa</h5>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm w-auto">
+                        <option value="Ganjil">Semester Ganjil</option>
+                        <option value="Genap">Semester Genap</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">NISN</th>
+                                <th>Nama Siswa</th>
+                                <th class="pe-4 text-end">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="s : ${siswaList}">
+                                <td class="ps-4 text-muted fw-medium" th:text="${s.nisn}"></td>
+                                <td class="fw-semibold text-dark" th:text="${s.namaSiswa}"></td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" th:data-bs-target="'#nilaiModal' + ${s.id}">
+                                        <i class="bi bi-journal-text me-1"></i>Input/Edit Nilai
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals for Nilai -->
+        <div th:each="s : ${siswaList}">
+            <div class="modal fade" th:id="'nilaiModal' + ${s.id}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content border-0 shadow">
+                        <form th:action="@{/guru/nilai/submit}" method="post">
+                            <input type="hidden" name="siswaId" th:value="${s.id}">
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-bold">Input Nilai - <span th:text="${s.namaSiswa}"></span></h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Semester</label>
+                                    <select name="semester" class="form-select" required>
+                                        <option value="Ganjil">Ganjil</option>
+                                        <option value="Genap">Genap</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">ID Mata Pelajaran (1-5)</label>
+                                    <input type="number" name="mapelId" class="form-control" value="1" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4 mb-3">
+                                        <label class="form-label small fw-semibold">Nilai Tugas (30%)</label>
+                                        <input type="number" step="0.1" name="tugas" class="form-control" required>
+                                    </div>
+                                    <div class="col-4 mb-3">
+                                        <label class="form-label small fw-semibold">Nilai UTS (30%)</label>
+                                        <input type="number" step="0.1" name="uts" class="form-control" required>
+                                    </div>
+                                    <div class="col-4 mb-3">
+                                        <label class="form-label small fw-semibold">Nilai UAS (40%)</label>
+                                        <input type="number" step="0.1" name="uas" class="form-control" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-primary">Simpan Nilai</button>
+                            </div>
                         </form>
-                    </li>
-                </ul>
+                    </div>
+                </div>
             </div>
         </div>
-    </nav>
 
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">Grade Input</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Welcome to the Grade Input module for AKAMSI.</p>
-                
-                <!-- TODO: Insert specific tables, forms, and data iterations here -->
-                
-            </div>
-        </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
