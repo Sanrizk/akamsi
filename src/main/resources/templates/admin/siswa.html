@@ -1,51 +1,241 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>AKAMSI - Manage Siswa</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AKAMSI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/admin/users">Users</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/akademik/kelas">Kelas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/akademik/mapel">Mapel</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/spp">SPP</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-light btn-sm mt-1" type="submit">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
+<html th:replace="~{layout/base :: layout('Manajemen Data Siswa', ~{::content})}">
+<body>
+<div th:fragment="content">
+    
+    <!-- Title & Breadcrumb -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Manajemen Data Siswa</h3>
+            <p class="text-muted mb-0">Kelola data peserta didik dan akun login siswa.</p>
         </div>
-    </nav>
+        <div>
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTambahSiswa">
+                <i class="bi bi-person-plus-fill me-1"></i> Tambah Siswa
+            </button>
+        </div>
+    </div>
 
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">Manage Siswa</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Welcome to the Manage Siswa module for AKAMSI.</p>
-                
-                <!-- TODO: Insert specific tables, forms, and data iterations here -->
-                
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Responsive Bootstrap Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">Daftar Siswa</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>NISN</th>
+                            <th>Nama Siswa</th>
+                            <th>L/P</th>
+                            <th>Kelas</th>
+                            <th>Nama Orang Tua</th>
+                            <th>No. HP</th>
+                            <th>Username</th>
+                            <th class="pe-4 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="s, iter : ${siswaList}">
+                            <td class="ps-4 text-muted" th:text="${iter.count}"></td>
+                            <td class="fw-medium text-secondary" th:text="${s.nisn}"></td>
+                            <td class="fw-bold text-dark" th:text="${s.namaSiswa}"></td>
+                            <td th:text="${s.jenisKelamin}"></td>
+                            <td th:text="${s.kelas != null ? s.kelas.namaKelas : '-'}"></td>
+                            <td th:text="${s.namaOrangTua}"></td>
+                            <td th:text="${s.noHpOrangTua}"></td>
+                            <td th:text="${s.user != null ? s.user.username : '-'}"></td>
+                            <td class="pe-4 text-end text-nowrap">
+                                <button class="btn btn-sm btn-outline-primary me-1 btn-edit-siswa"
+                                        th:data-id="${s.id}"
+                                        th:data-nisn="${s.nisn}"
+                                        th:data-nama="${s.namaSiswa}"
+                                        th:data-jk="${s.jenisKelamin}"
+                                        th:data-kelas="${s.kelas != null ? s.kelas.id : ''}"
+                                        th:data-ortu="${s.namaOrangTua}"
+                                        th:data-hp="${s.noHpOrangTua}"
+                                        th:data-username="${s.user != null ? s.user.username : ''}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                
+                                <form th:action="@{/admin/siswa/delete/{id}(id=${s.id})}" method="post" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus siswa ini beserta akun login-nya?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus Siswa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${siswaList == null or siswaList.isEmpty()}">
+                            <td colspan="9" class="text-center py-5 text-muted">Belum ada data siswa.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Modal Tambah Siswa -->
+    <div class="modal fade" id="modalTambahSiswa" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <form th:action="@{/admin/siswa/add}" method="post">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Tambah Siswa Baru</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">NISN</label>
+                                <input type="text" name="nisn" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Nama Lengkap Siswa</label>
+                                <input type="text" name="namaSiswa" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Jenis Kelamin</label>
+                                <select name="jenisKelamin" class="form-select" required>
+                                    <option value="">-- Pilih --</option>
+                                    <option value="L">Laki-laki (L)</option>
+                                    <option value="P">Perempuan (P)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Kelas</label>
+                                <select name="kelasId" class="form-select" required>
+                                    <option value="">-- Pilih Kelas --</option>
+                                    <option th:each="k : ${kelasList}" th:value="${k.id}" th:text="${k.namaKelas}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Nama Orang Tua</label>
+                                <input type="text" name="namaOrangTua" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">No. HP Orang Tua</label>
+                                <input type="text" name="noHpOrangTua" class="form-control">
+                            </div>
+                            <hr class="my-3 col-12">
+                            <h6 class="fw-bold mb-2">Informasi Akun Login</h6>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Username Akun</label>
+                                <input type="text" name="username" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Password Akun</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Siswa -->
+    <div class="modal fade" id="modalEditSiswa" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <form id="formEditSiswa" method="post">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title fw-bold">Edit Data Siswa</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">NISN</label>
+                                <input type="text" name="nisn" id="editNisn" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Nama Lengkap Siswa</label>
+                                <input type="text" name="namaSiswa" id="editNama" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Jenis Kelamin</label>
+                                <select name="jenisKelamin" id="editJk" class="form-select" required>
+                                    <option value="L">Laki-laki (L)</option>
+                                    <option value="P">Perempuan (P)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Kelas</label>
+                                <select name="kelasId" id="editKelas" class="form-select" required>
+                                    <option th:each="k : ${kelasList}" th:value="${k.id}" th:text="${k.namaKelas}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Nama Orang Tua</label>
+                                <input type="text" name="namaOrangTua" id="editOrtu" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">No. HP Orang Tua</label>
+                                <input type="text" name="noHpOrangTua" id="editHp" class="form-control">
+                            </div>
+                            <hr class="my-3 col-12">
+                            <h6 class="fw-bold mb-2">Informasi Akun Login</h6>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Username Akun</label>
+                                <input type="text" name="username" id="editUsername" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Password (Kosongkan jika tidak diubah)</label>
+                                <input type="password" name="password" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4">Update Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client-side Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButtons = document.querySelectorAll('.btn-edit-siswa');
+            const formEdit = document.getElementById('formEditSiswa');
+            
+            editButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    
+                    document.getElementById('editNisn').value = this.getAttribute('data-nisn');
+                    document.getElementById('editNama').value = this.getAttribute('data-nama');
+                    document.getElementById('editJk').value = this.getAttribute('data-jk');
+                    document.getElementById('editKelas').value = this.getAttribute('data-kelas');
+                    document.getElementById('editOrtu').value = this.getAttribute('data-ortu');
+                    document.getElementById('editHp').value = this.getAttribute('data-hp');
+                    document.getElementById('editUsername').value = this.getAttribute('data-username');
+                    
+                    formEdit.action = '/admin/siswa/edit/' + id;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('modalEditSiswa'));
+                    modal.show();
+                });
+            });
+        });
+    </script>
+</div>
 </body>
 </html>
