@@ -1,12 +1,10 @@
 package com.akamsi.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
-@Data
 @Entity
-@Table(name = "nilai")
-public class Nilai {
+@Table(name = "rapor_akhir")
+public class RaporAkhir {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,39 +20,24 @@ public class Nilai {
     @Column(nullable = false)
     private String semester;
 
-    @Column(name = "nilai_tugas")
-    private Double nilaiTugas;
-
-    @Column(name = "nilai_uts")
-    private Double nilaiUts;
-
-    @Column(name = "nilai_uas")
-    private Double nilaiUas;
-
-    @Column(name = "nilai_akhir")
+    @Column(name = "nilai_akhir", nullable = false)
     private Double nilaiAkhir;
+
+    @Column(name = "deskripsi_capaian", length = 1000)
+    private String deskripsiCapaian;
+
+    public RaporAkhir() {}
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    
     public Siswa getSiswa() { return siswa; }
     public void setSiswa(Siswa siswa) { this.siswa = siswa; }
-    
     public MataPelajaran getMapel() { return mapel; }
     public void setMapel(MataPelajaran mapel) { this.mapel = mapel; }
-    
     public String getSemester() { return semester; }
     public void setSemester(String semester) { this.semester = semester; }
-    
-    public Double getNilaiTugas() { return nilaiTugas; }
-    public void setNilaiTugas(Double nilaiTugas) { this.nilaiTugas = nilaiTugas; }
-    
-    public Double getNilaiUts() { return nilaiUts; }
-    public void setNilaiUts(Double nilaiUts) { this.nilaiUts = nilaiUts; }
-    
-    public Double getNilaiUas() { return nilaiUas; }
-    public void setNilaiUas(Double nilaiUas) { this.nilaiUas = nilaiUas; }
-    
     public Double getNilaiAkhir() { return nilaiAkhir; }
     public void setNilaiAkhir(Double nilaiAkhir) { this.nilaiAkhir = nilaiAkhir; }
+    public String getDeskripsiCapaian() { return deskripsiCapaian; }
+    public void setDeskripsiCapaian(String deskripsiCapaian) { this.deskripsiCapaian = deskripsiCapaian; }
 }

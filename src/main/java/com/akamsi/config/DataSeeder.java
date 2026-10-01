@@ -2,6 +2,7 @@ package com.akamsi.config;
 
 import com.akamsi.entity.*;
 import com.akamsi.repository.*;
+import java.util.Optional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,20 +18,28 @@ public class DataSeeder implements CommandLineRunner {
     private final KelasRepository kelasRepository;
     private final SiswaRepository siswaRepository;
     private final MataPelajaranRepository mapelRepository;
-    private final NilaiRepository nilaiRepository;
     private final PembayaranSPPRepository sppRepository;
+    private final KurikulumRepository kurikulumRepository;
+    private final KomponenNilaiRepository komponenNilaiRepository;
+    private final NilaiSiswaRepository nilaiSiswaRepository;
+    private final RaporAkhirRepository raporAkhirRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(UserRepository userRepository, GuruRepository guruRepository, KelasRepository kelasRepository,
                       SiswaRepository siswaRepository, MataPelajaranRepository mapelRepository,
-                      NilaiRepository nilaiRepository, PembayaranSPPRepository sppRepository, PasswordEncoder passwordEncoder) {
+                      PembayaranSPPRepository sppRepository, KurikulumRepository kurikulumRepository,
+                      KomponenNilaiRepository komponenNilaiRepository, NilaiSiswaRepository nilaiSiswaRepository,
+                      RaporAkhirRepository raporAkhirRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.guruRepository = guruRepository;
         this.kelasRepository = kelasRepository;
         this.siswaRepository = siswaRepository;
         this.mapelRepository = mapelRepository;
-        this.nilaiRepository = nilaiRepository;
         this.sppRepository = sppRepository;
+        this.kurikulumRepository = kurikulumRepository;
+        this.komponenNilaiRepository = komponenNilaiRepository;
+        this.nilaiSiswaRepository = nilaiSiswaRepository;
+        this.raporAkhirRepository = raporAkhirRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -74,17 +83,25 @@ public class DataSeeder implements CommandLineRunner {
             guru2.setNoHp("081987654321");
             guruRepository.save(guru2);
 
+            // 2.5 Initialize Curricula
+            Kurikulum kurmer = new Kurikulum("Kurikulum Merdeka", "Fokus capaian pembelajaran", true);
+            Kurikulum k13 = new Kurikulum("Kurikulum 2013", "Fokus kompetensi", true);
+            kurikulumRepository.save(kurmer);
+            kurikulumRepository.save(k13);
+
             // 3. Create 2 Classes (Kelas)
             Kelas kelas1A = new Kelas();
             kelas1A.setNamaKelas("Kelas 1-A");
             kelas1A.setTahunAjaran("2023/2024");
             kelas1A.setWaliKelas(guru1);
+            kelas1A.setKurikulum(kurmer);
             kelasRepository.save(kelas1A);
 
             Kelas kelas2A = new Kelas();
             kelas2A.setNamaKelas("Kelas 2-A");
             kelas2A.setTahunAjaran("2023/2024");
             kelas2A.setWaliKelas(guru2);
+            kelas2A.setKurikulum(k13);
             kelasRepository.save(kelas2A);
 
             // 4. Create 5 Master Subjects (MataPelajaran)
@@ -125,19 +142,37 @@ public class DataSeeder implements CommandLineRunner {
                 spp.setStatus(StatusPembayaran.BELUM_LUNAS);
                 sppRepository.save(spp);
 
-                // 7. Generate Sample Grade (Nilai) for this Student (in Matematika)
-                Nilai nilai = new Nilai();
-                nilai.setSiswa(siswa);
-                nilai.setMapel(allMapel.get(0)); // Matematika
-                nilai.setSemester("Ganjil");
-                nilai.setNilaiTugas(80.0 + i);
-                nilai.setNilaiUts(75.0 + i);
-                nilai.setNilaiUas(85.0 - i);
-                
-                // Calculate Final Grade
-                double akhir = (nilai.getNilaiTugas() * 0.3) + (nilai.getNilaiUts() * 0.3) + (nilai.getNilaiUas() * 0.4);
-                nilai.setNilaiAkhir(akhir);
-                nilaiRepository.save(nilai);
+
+            }
+
+            // 7. Generate Assessment Headers (KomponenNilai)
+            KomponenNilai formatif1 = new KomponenNilai();
+            formatif1.setKelas(kelas1A);
+            formatif1.setMapel(allMapel.get(0));
+            formatif1.setSemester("Ganjil");
+            formatif1.setNamaPenilaian("Sumatif Lingkup Materi 1");
+            formatif1.setKategori(KategoriNilai.FORMATIF_HARIAN);
+            formatif1.setBobot(1.0);
+            formatif1.setTujuanPembelajaran("Peserta didik memahami bilangan pecahan");
+            komponenNilaiRepository.save(formatif1);
+
+            // 8. Generate Student Scores (NilaiSiswa) and Final Report (RaporAkhir)
+            for (Siswa s : siswaRepository.findAll()) {
+                if (s.getKelas().getId().equals(kelas1A.getId())) {
+                    NilaiSiswa ns = new NilaiSiswa();
+                    ns.setSiswa(s);
+                    ns.setKomponenNilai(formatif1);
+                    ns.setNilaiAngka(85.0 + s.getId());
+                    nilaiSiswaRepository.save(ns);
+                    
+                    RaporAkhir rapor = new RaporAkhir();
+                    rapor.setSiswa(s);
+                    rapor.setMapel(allMapel.get(0));
+                    rapor.setSemester("Ganjil");
+                    rapor.setNilaiAkhir(85.0 + s.getId());
+                    rapor.setDeskripsiCapaian("Siswa menunjukkan penguasaan sangat baik.");
+                    raporAkhirRepository.save(rapor);
+                }
             }
         }
     }

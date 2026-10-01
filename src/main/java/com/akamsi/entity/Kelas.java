@@ -18,8 +18,12 @@ public class Kelas {
     private String tahunAjaran;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "guru_id")
+    @JoinColumn(name = "wali_kelas_id")
     private Guru waliKelas;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "kurikulum_id")
+    private Kurikulum kurikulum;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -32,4 +36,7 @@ public class Kelas {
     
     public Guru getWaliKelas() { return waliKelas; }
     public void setWaliKelas(Guru waliKelas) { this.waliKelas = waliKelas; }
+
+    public Kurikulum getKurikulum() { return kurikulum; }
+    public void setKurikulum(Kurikulum kurikulum) { this.kurikulum = kurikulum; }
 }
