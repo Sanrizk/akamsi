@@ -1,67 +1,189 @@
 <!DOCTYPE html>
-<html th:replace="~{layout/base :: layout('Input Presensi', ~{::content})}">
-<head></head>
+<html th:replace="~{layout/base :: layout('Input Presensi Siswa', ~{::content})}">
 <body>
-    <div th:fragment="content">
+<div th:fragment="content">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Presensi Siswa</h3>
+            <p class="text-muted mb-0">Catat kehadiran siswa berdasarkan kelas, mata pelajaran, dan tanggal.</p>
+        </div>
+    </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h3 class="fw-bold mb-1">Input Presensi Siswa</h3>
-                <p class="text-muted mb-0" th:if="${siswaList != null and !siswaList.isEmpty()}" th:text="'Kelas: ' + ${siswaList[0].kelas.namaKelas} + ' | TA: ' + ${siswaList[0].kelas.tahunAjaran} + ' | Total: ' + ${#lists.size(siswaList)} + ' Siswa'"></p>
-                <p class="text-muted mb-0" th:if="${siswaList == null or siswaList.isEmpty()}">Belum ada siswa di kelas Anda.</p>
-            </div>
-            <div>
-                <form class="d-flex" th:action="@{/guru/presensi}" method="get">
-                    <input type="date" class="form-control me-2" name="tanggal" th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
-                </form>
+    <!-- Flash Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-funnel text-primary me-2"></i>Filter Presensi</h5>
+        </div>
+        <div class="card-body bg-light">
+            <form th:action="@{/guru/presensi}" method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Pilih Kelas</label>
+                    <select id="selectKelas" name="kelasId" class="form-select" required>
+                        <option value="" disabled th:selected="${selectedKelasId == null}">-- Pilih Kelas --</option>
+                        <option th:each="k : ${kelasList}" 
+                                th:value="${k.id}" 
+                                th:text="${k.namaKelas}"
+                                th:selected="${selectedKelasId != null and selectedKelasId == k.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Pilih Mata Pelajaran</label>
+                    <select id="selectMapel" name="mapelId" class="form-select" required th:disabled="${mapelList == null}">
+                        <option value="" disabled th:selected="${selectedMapelId == null}">-- Pilih Mata Pelajaran --</option>
+                        <option th:if="${mapelList != null}" th:each="m : ${mapelList}" 
+                                th:value="${m.id}" 
+                                th:text="${m.namaMapel}"
+                                th:selected="${selectedMapelId != null and selectedMapelId == m.id}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">Tanggal</label>
+                    <input type="date" id="inputTanggal" name="tanggal" class="form-control" th:value="${selectedTanggal}" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                        <i class="bi bi-search me-1"></i> Tampilkan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Batch Attendance Form -->
+    <div th:if="${formPresensi != null}" class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    Input Presensi: <span class="text-primary" th:text="${selectedKelas.namaKelas}"></span>
+                </h5>
+                <div>
+                    <span class="badge bg-info text-dark me-2" th:text="'Mapel: ' + ${selectedMapel.namaMapel}"></span>
+                    <span class="badge bg-secondary" th:text="'Tanggal: ' + ${#temporals.format(selectedTanggal, 'dd-MM-yyyy')}"></span>
+                </div>
             </div>
         </div>
-
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold">Daftar Siswa</h5>
-            </div>
-            <div class="card-body p-0">
+        
+        <div class="card-body p-0">
+            <form th:action="@{/guru/presensi/save}" method="post" th:object="${formPresensi}">
+                <input type="hidden" th:field="*{kelasId}">
+                <input type="hidden" th:field="*{mapelId}">
+                <input type="hidden" th:field="*{tanggal}">
+                
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="ps-4">NISN</th>
-                                <th>Nama Siswa</th>
-                                <th>Status Kehadiran</th>
-                                <th>Keterangan</th>
-                                <th class="pe-4 text-end">Aksi</th>
+                                <th class="ps-4" style="width: 5%">No</th>
+                                <th style="width: 15%">NISN</th>
+                                <th style="width: 25%">Nama Siswa</th>
+                                <th style="width: 35%">Status Kehadiran</th>
+                                <th class="pe-4" style="width: 20%">Keterangan</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="s : ${siswaList}">
-                                <form th:action="@{/guru/presensi/submit}" method="post">
-                                    <input type="hidden" name="siswaId" th:value="${s.id}">
-                                    <input type="hidden" name="tanggal" th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
-                                    <td class="ps-4 text-muted fw-medium" th:text="${s.nisn}"></td>
-                                    <td class="fw-semibold text-dark" th:text="${s.namaSiswa}"></td>
-                                    <td>
-                                        <select name="status" class="form-select form-select-sm" required>
-                                            <option value="HADIR">Hadir</option>
-                                            <option value="SAKIT">Sakit</option>
-                                            <option value="IZIN">Izin</option>
-                                            <option value="ALPA">Alpa</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="text" name="keterangan" class="form-control form-control-sm" placeholder="Opsional...">
-                                    </td>
-                                    <td class="pe-4 text-end">
-                                        <button type="submit" class="btn btn-sm btn-primary shadow-sm"><i class="bi bi-check2 me-1"></i>Simpan</button>
-                                    </td>
-                                </form>
+                            <tr th:each="item, stat : *{items}">
+                                <td class="ps-4 text-muted" th:text="${stat.count}"></td>
+                                <td>
+                                    <span class="text-secondary" th:text="${item.nisn}"></span>
+                                    <input type="hidden" th:field="*{items[__${stat.index}__].siswaId}" />
+                                </td>
+                                <td class="fw-bold text-dark" th:text="${item.namaSiswa}"></td>
+                                <td>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" th:field="*{items[__${stat.index}__].status}" th:value="'HADIR'" th:id="'hadir_' + ${stat.index}" required autocomplete="off">
+                                        <label class="btn btn-outline-success btn-sm fw-semibold" th:for="'hadir_' + ${stat.index}">HADIR</label>
+                                        
+                                        <input type="radio" class="btn-check" th:field="*{items[__${stat.index}__].status}" th:value="'SAKIT'" th:id="'sakit_' + ${stat.index}" required autocomplete="off">
+                                        <label class="btn btn-outline-warning btn-sm fw-semibold" th:for="'sakit_' + ${stat.index}">SAKIT</label>
+                                        
+                                        <input type="radio" class="btn-check" th:field="*{items[__${stat.index}__].status}" th:value="'IZIN'" th:id="'izin_' + ${stat.index}" required autocomplete="off">
+                                        <label class="btn btn-outline-info btn-sm fw-semibold" th:for="'izin_' + ${stat.index}">IZIN</label>
+                                        
+                                        <input type="radio" class="btn-check" th:field="*{items[__${stat.index}__].status}" th:value="'ALPA'" th:id="'alpa_' + ${stat.index}" required autocomplete="off">
+                                        <label class="btn btn-outline-danger btn-sm fw-semibold" th:for="'alpa_' + ${stat.index}">ALPA</label>
+                                    </div>
+                                </td>
+                                <td class="pe-4">
+                                    <input type="text" class="form-control form-control-sm" th:field="*{items[__${stat.index}__].keterangan}" placeholder="Opsional...">
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(formPresensi.items)}">
+                                <td colspan="5" class="text-center py-5 text-muted">Belum ada data siswa di kelas ini.</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
+                
+                <div class="card-footer bg-white py-3 border-top d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success px-5 shadow-sm">
+                        <i class="bi bi-save me-2"></i> Simpan Presensi
+                    </button>
+                </div>
+            </form>
         </div>
-
     </div>
+
+    <!-- Empty State -->
+    <div th:if="${formPresensi == null}">
+        <div class="alert alert-info text-center border-0 shadow-sm py-4">
+            <i class="bi bi-info-circle me-2"></i> Silakan pilih Kelas, Mata Pelajaran, dan Tanggal lalu klik <strong>Tampilkan</strong> untuk mengisi presensi.
+        </div>
+    </div>
+
+    <!-- Client-Side Script for Cascading Dropdown -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectKelas = document.getElementById('selectKelas');
+            const selectMapel = document.getElementById('selectMapel');
+
+            if (selectKelas && selectMapel) {
+                selectKelas.addEventListener('change', function() {
+                    const kelasId = this.value;
+                    if (!kelasId) {
+                        selectMapel.innerHTML = '<option value="" disabled selected>-- Pilih Mata Pelajaran --</option>';
+                        selectMapel.disabled = true;
+                        return;
+                    }
+
+                    selectMapel.disabled = true;
+                    selectMapel.innerHTML = '<option value="" disabled selected>-- Memuat Mata Pelajaran... --</option>';
+
+                    fetch('/guru/presensi/api/mapel-by-kelas?kelasId=' + kelasId)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            selectMapel.innerHTML = '<option value="" disabled selected>-- Pilih Mata Pelajaran --</option>';
+                            data.forEach(mapel => {
+                                const option = document.createElement('option');
+                                option.value = mapel.id;
+                                option.textContent = mapel.namaMapel;
+                                selectMapel.appendChild(option);
+                            });
+                            selectMapel.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Fetch error:', error);
+                            selectMapel.innerHTML = '<option value="" disabled selected>-- Gagal memuat data --</option>';
+                        });
+                });
+            }
+        });
+    </script>
+</div>
 </body>
 </html>

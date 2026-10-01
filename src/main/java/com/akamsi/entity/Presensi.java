@@ -1,10 +1,8 @@
 package com.akamsi.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDate;
 
-@Data
 @Entity
 @Table(name = "presensi")
 public class Presensi {
@@ -16,20 +14,39 @@ public class Presensi {
     @JoinColumn(name = "siswa_id", nullable = false)
     private Siswa siswa;
 
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mapel_id", nullable = false)
+    private MataPelajaran mapel;
+
+    @Column(name = "tanggal", nullable = false)
     private LocalDate tanggal;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     private StatusPresensi status;
 
+    @Column(name = "keterangan")
     private String keterangan;
+
+    public Presensi() {}
+
+    public Presensi(Long id, Siswa siswa, MataPelajaran mapel, LocalDate tanggal, StatusPresensi status, String keterangan) {
+        this.id = id;
+        this.siswa = siswa;
+        this.mapel = mapel;
+        this.tanggal = tanggal;
+        this.status = status;
+        this.keterangan = keterangan;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
     public Siswa getSiswa() { return siswa; }
     public void setSiswa(Siswa siswa) { this.siswa = siswa; }
+
+    public MataPelajaran getMapel() { return mapel; }
+    public void setMapel(MataPelajaran mapel) { this.mapel = mapel; }
     
     public LocalDate getTanggal() { return tanggal; }
     public void setTanggal(LocalDate tanggal) { this.tanggal = tanggal; }
