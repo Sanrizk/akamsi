@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/base :: layout('Manajemen Kurikulum', ~{::content})}">
+<body>
+<div th:fragment="content">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Manajemen Kurikulum</h3>
+            <p class="text-muted mb-0">Kelola master data kurikulum untuk sistem akademik.</p>
+        </div>
+        <div>
+            <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addKurikulumModal">
+                <i class="bi bi-plus-lg me-1"></i> Tambah Kurikulum
+            </button>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">Daftar Kurikulum</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>Nama Kurikulum</th>
+                            <th>Keterangan</th>
+                            <th>Status</th>
+                            <th class="pe-4 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="k, iterStat : ${kurikulumList}">
+                            <td class="ps-4" th:text="${iterStat.count}"></td>
+                            <td class="fw-semibold text-dark" th:text="${k.namaKurikulum}"></td>
+                            <td th:text="${k.keterangan != null ? k.keterangan : '-'}"></td>
+                            <td>
+                                <span th:if="${k.aktif}" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1">Aktif</span>
+                                <span th:unless="${k.aktif}" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-3 py-1">Tidak Aktif</span>
+                            </td>
+                            <td class="pe-4 text-end">
+                                <!-- Edit Button -->
+                                <button class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" th:data-bs-target="'#editModal' + ${k.id}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <!-- Delete Button -->
+                                <form th:action="@{/admin/akademik/kurikulum/delete/{id}(id=${k.id})}" method="post" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kurikulum ini? Data yang terkait mungkin akan hilang.');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${kurikulumList == null or kurikulumList.isEmpty()}">
+                            <td colspan="5" class="text-center py-4 text-muted">Belum ada data kurikulum.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals for Add & Edit -->
+    <!-- Add Modal -->
+    <div class="modal fade" id="addKurikulumModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <form th:action="@{/admin/akademik/kurikulum/add}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Tambah Kurikulum Baru</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Nama Kurikulum</label>
+                            <input type="text" name="namaKurikulum" class="form-control" required placeholder="Contoh: Kurikulum Merdeka">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Keterangan</label>
+                            <textarea name="keterangan" class="form-control" rows="3" placeholder="Deskripsi kurikulum..."></textarea>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="aktif" value="true" id="addAktif" checked>
+                            <label class="form-check-label" for="addAktif">Status Aktif</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modals (One per row) -->
+    <div th:each="k : ${kurikulumList}">
+        <div class="modal fade" th:id="'editModal' + ${k.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow">
+                    <form th:action="@{/admin/akademik/kurikulum/edit/{id}(id=${k.id})}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold">Edit Kurikulum</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Nama Kurikulum</label>
+                                <input type="text" name="namaKurikulum" class="form-control" th:value="${k.namaKurikulum}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Keterangan</label>
+                                <textarea name="keterangan" class="form-control" rows="3" th:text="${k.keterangan}"></textarea>
+                            </div>
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="aktif" value="true" th:id="'editAktif' + ${k.id}" th:checked="${k.aktif}">
+                                <label class="form-check-label" th:for="'editAktif' + ${k.id}">Status Aktif</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

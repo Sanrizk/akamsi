@@ -1,6 +1,7 @@
 package com.akamsi.controller;
 
 import com.akamsi.entity.Kelas;
+import com.akamsi.entity.Kurikulum;
 import com.akamsi.entity.MataPelajaran;
 import com.akamsi.service.AkademikService;
 import org.springframework.stereotype.Controller;
@@ -17,16 +18,53 @@ public class AdminAkademikController {
         this.akademikService = akademikService;
     }
 
-    // ==================== KELAS ====================
+    // ==================== KURIKULUM ====================
+    @GetMapping("/kurikulum")
+    public String listKurikulum(Model model) {
+        model.addAttribute("kurikulumList", akademikService.getAllKurikulum());
+        return "admin/akademik/kurikulum";
+    }
 
-    // READ
+    @PostMapping("/kurikulum/add")
+    public String addKurikulum(@ModelAttribute Kurikulum kurikulum, RedirectAttributes ra) {
+        try {
+            akademikService.saveKurikulum(kurikulum);
+            ra.addFlashAttribute("success", "Kurikulum berhasil ditambahkan.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/akademik/kurikulum";
+    }
+
+    @PostMapping("/kurikulum/edit/{id}")
+    public String editKurikulum(@PathVariable Long id, @ModelAttribute Kurikulum kurikulum, RedirectAttributes ra) {
+        try {
+            akademikService.updateKurikulum(id, kurikulum);
+            ra.addFlashAttribute("success", "Kurikulum berhasil diupdate.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/akademik/kurikulum";
+    }
+
+    @PostMapping("/kurikulum/delete/{id}")
+    public String deleteKurikulum(@PathVariable Long id, RedirectAttributes ra) {
+        try {
+            akademikService.deleteKurikulum(id);
+            ra.addFlashAttribute("success", "Kurikulum berhasil dihapus.");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/akademik/kurikulum";
+    }
+
+    // ==================== KELAS ====================
     @GetMapping("/kelas")
     public String listKelas(Model model) {
         model.addAttribute("kelasList", akademikService.getAllKelas());
         return "admin/akademik/kelas";
     }
 
-    // CREATE
     @PostMapping("/kelas/add")
     public String addKelas(@ModelAttribute Kelas kelas, RedirectAttributes ra) {
         try {
@@ -38,7 +76,6 @@ public class AdminAkademikController {
         return "redirect:/admin/akademik/kelas";
     }
 
-    // UPDATE
     @PostMapping("/kelas/edit/{id}")
     public String editKelas(@PathVariable Long id,
                             @RequestParam String namaKelas,
@@ -53,7 +90,6 @@ public class AdminAkademikController {
         return "redirect:/admin/akademik/kelas";
     }
 
-    // DELETE
     @PostMapping("/kelas/delete/{id}")
     public String deleteKelas(@PathVariable Long id, RedirectAttributes ra) {
         try {
@@ -66,15 +102,12 @@ public class AdminAkademikController {
     }
 
     // ==================== MAPEL ====================
-
-    // READ
     @GetMapping("/mapel")
     public String listMapel(Model model) {
         model.addAttribute("mapelList", akademikService.getAllMapel());
         return "admin/akademik/mapel";
     }
 
-    // CREATE
     @PostMapping("/mapel/add")
     public String addMapel(@ModelAttribute MataPelajaran mapel, RedirectAttributes ra) {
         try {
@@ -86,7 +119,6 @@ public class AdminAkademikController {
         return "redirect:/admin/akademik/mapel";
     }
 
-    // UPDATE
     @PostMapping("/mapel/edit/{id}")
     public String editMapel(@PathVariable Long id,
                             @RequestParam String namaMapel,
@@ -100,7 +132,6 @@ public class AdminAkademikController {
         return "redirect:/admin/akademik/mapel";
     }
 
-    // DELETE
     @PostMapping("/mapel/delete/{id}")
     public String deleteMapel(@PathVariable Long id, RedirectAttributes ra) {
         try {

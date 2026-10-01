@@ -2,7 +2,6 @@ package com.akamsi.config;
 
 import com.akamsi.entity.*;
 import com.akamsi.repository.*;
-import java.util.Optional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,37 +17,36 @@ public class DataSeeder implements CommandLineRunner {
     private final KelasRepository kelasRepository;
     private final SiswaRepository siswaRepository;
     private final MataPelajaranRepository mapelRepository;
-    private final PembayaranSPPRepository sppRepository;
     private final KurikulumRepository kurikulumRepository;
     private final KomponenNilaiRepository komponenNilaiRepository;
     private final NilaiSiswaRepository nilaiSiswaRepository;
     private final RaporAkhirRepository raporAkhirRepository;
+    private final PembayaranSPPRepository sppRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(UserRepository userRepository, GuruRepository guruRepository, KelasRepository kelasRepository,
-                      SiswaRepository siswaRepository, MataPelajaranRepository mapelRepository,
-                      PembayaranSPPRepository sppRepository, KurikulumRepository kurikulumRepository,
+    public DataSeeder(UserRepository userRepository, GuruRepository guruRepository, 
+                      KelasRepository kelasRepository, SiswaRepository siswaRepository, 
+                      MataPelajaranRepository mapelRepository, KurikulumRepository kurikulumRepository,
                       KomponenNilaiRepository komponenNilaiRepository, NilaiSiswaRepository nilaiSiswaRepository,
-                      RaporAkhirRepository raporAkhirRepository, PasswordEncoder passwordEncoder) {
+                      RaporAkhirRepository raporAkhirRepository, PembayaranSPPRepository sppRepository, 
+                      PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.guruRepository = guruRepository;
         this.kelasRepository = kelasRepository;
         this.siswaRepository = siswaRepository;
         this.mapelRepository = mapelRepository;
-        this.sppRepository = sppRepository;
         this.kurikulumRepository = kurikulumRepository;
         this.komponenNilaiRepository = komponenNilaiRepository;
         this.nilaiSiswaRepository = nilaiSiswaRepository;
         this.raporAkhirRepository = raporAkhirRepository;
+        this.sppRepository = sppRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        // Only seed data if the database is completely empty
         if (userRepository.count() == 0) {
             
-            // 1. Create Default Admin
             User admin = new User();
             admin.setUsername("admin");
             admin.setPassword(passwordEncoder.encode("admin123"));
@@ -56,7 +54,6 @@ public class DataSeeder implements CommandLineRunner {
             admin.setRole(Role.ADMIN);
             userRepository.save(admin);
 
-            // 2. Create 2 Teachers (Guru)
             User userGuru1 = new User();
             userGuru1.setUsername("guru1");
             userGuru1.setPassword(passwordEncoder.encode("guru123"));
@@ -83,37 +80,34 @@ public class DataSeeder implements CommandLineRunner {
             guru2.setNoHp("081987654321");
             guruRepository.save(guru2);
 
-            // 2.5 Initialize Curricula
-            Kurikulum kurmer = new Kurikulum("Kurikulum Merdeka", "Fokus capaian pembelajaran", true);
-            Kurikulum k13 = new Kurikulum("Kurikulum 2013", "Fokus kompetensi", true);
+            Kurikulum kurmer = new Kurikulum(null, "Kurikulum Merdeka", "Fokus capaian pembelajaran (TP)", true);
+            Kurikulum k13 = new Kurikulum(null, "Kurikulum 2013", "Fokus kompetensi dasar (KD)", false);
             kurikulumRepository.save(kurmer);
             kurikulumRepository.save(k13);
 
-            // 3. Create 2 Classes (Kelas)
             Kelas kelas1A = new Kelas();
-            kelas1A.setNamaKelas("Kelas 1-A");
-            kelas1A.setTahunAjaran("2023/2024");
+            kelas1A.setNamaKelas("Kelas 1A");
+            kelas1A.setTahunAjaran("2024/2025");
             kelas1A.setWaliKelas(guru1);
             kelas1A.setKurikulum(kurmer);
             kelasRepository.save(kelas1A);
 
-            Kelas kelas2A = new Kelas();
-            kelas2A.setNamaKelas("Kelas 2-A");
-            kelas2A.setTahunAjaran("2023/2024");
-            kelas2A.setWaliKelas(guru2);
-            kelas2A.setKurikulum(k13);
-            kelasRepository.save(kelas2A);
+            Kelas kelas4A = new Kelas();
+            kelas4A.setNamaKelas("Kelas 4A");
+            kelas4A.setTahunAjaran("2024/2025");
+            kelas4A.setWaliKelas(guru2);
+            kelas4A.setKurikulum(kurmer);
+            kelasRepository.save(kelas4A);
 
-            // 4. Create 5 Master Subjects (MataPelajaran)
-            String[] mapelNames = {"Matematika", "Bahasa Indonesia", "IPA", "IPS", "Pendidikan Agama"};
+            String[] mapelNames = {"Matematika", "Bahasa Indonesia", "Pendidikan Pancasila"};
             for (String mapelName : mapelNames) {
                 MataPelajaran mapel = new MataPelajaran();
                 mapel.setNamaMapel(mapelName);
                 mapelRepository.save(mapel);
             }
             List<MataPelajaran> allMapel = mapelRepository.findAll();
+            MataPelajaran mtk = allMapel.get(0); 
 
-            // 5. Create 4 Students (Siswa)
             for (int i = 1; i <= 4; i++) {
                 User userSiswa = new User();
                 userSiswa.setUsername("siswa" + i);
@@ -129,50 +123,62 @@ public class DataSeeder implements CommandLineRunner {
                 siswa.setJenisKelamin(i % 2 == 0 ? "L" : "P");
                 siswa.setNamaOrangTua("Ortu Siswa " + i);
                 siswa.setNoHpOrangTua("08560000000" + i);
-                // Assign first 2 students to Kelas 1-A, next 2 to Kelas 2-A
-                siswa.setKelas(i <= 2 ? kelas1A : kelas2A); 
+                
+                siswa.setKelas(i <= 2 ? kelas1A : kelas4A); 
                 siswaRepository.save(siswa);
-
-                // 6. Generate Sample SPP Record for this Student
+                
                 PembayaranSPP spp = new PembayaranSPP();
                 spp.setSiswa(siswa);
-                spp.setBulan("Januari");
+                spp.setBulan("Agustus");
                 spp.setTahun(2024);
                 spp.setJumlahBayar(new BigDecimal("150000"));
                 spp.setStatus(StatusPembayaran.BELUM_LUNAS);
                 sppRepository.save(spp);
-
-
             }
 
-            // 7. Generate Assessment Headers (KomponenNilai)
-            KomponenNilai formatif1 = new KomponenNilai();
-            formatif1.setKelas(kelas1A);
-            formatif1.setMapel(allMapel.get(0));
-            formatif1.setSemester("Ganjil");
-            formatif1.setNamaPenilaian("Sumatif Lingkup Materi 1");
-            formatif1.setKategori(KategoriNilai.FORMATIF_HARIAN);
-            formatif1.setBobot(1.0);
-            formatif1.setTujuanPembelajaran("Peserta didik memahami bilangan pecahan");
-            komponenNilaiRepository.save(formatif1);
+            KomponenNilai sumatif1 = new KomponenNilai();
+            sumatif1.setKelas(kelas1A);
+            sumatif1.setMapel(mtk);
+            sumatif1.setNamaKomponen("Sumatif Bab 1");
+            sumatif1.setKategoriNilai(KategoriNilai.HARIAN);
+            sumatif1.setDeskripsiTujuanPembelajaran("Mampu membaca dan menulis bilangan cacah");
+            komponenNilaiRepository.save(sumatif1);
 
-            // 8. Generate Student Scores (NilaiSiswa) and Final Report (RaporAkhir)
-            for (Siswa s : siswaRepository.findAll()) {
-                if (s.getKelas().getId().equals(kelas1A.getId())) {
-                    NilaiSiswa ns = new NilaiSiswa();
-                    ns.setSiswa(s);
-                    ns.setKomponenNilai(formatif1);
-                    ns.setNilaiAngka(85.0 + s.getId());
-                    nilaiSiswaRepository.save(ns);
-                    
-                    RaporAkhir rapor = new RaporAkhir();
-                    rapor.setSiswa(s);
-                    rapor.setMapel(allMapel.get(0));
-                    rapor.setSemester("Ganjil");
-                    rapor.setNilaiAkhir(85.0 + s.getId());
-                    rapor.setDeskripsiCapaian("Siswa menunjukkan penguasaan sangat baik.");
-                    raporAkhirRepository.save(rapor);
-                }
+            KomponenNilai sumatif2 = new KomponenNilai();
+            sumatif2.setKelas(kelas1A);
+            sumatif2.setMapel(mtk);
+            sumatif2.setNamaKomponen("Sumatif Bab 2");
+            sumatif2.setKategoriNilai(KategoriNilai.HARIAN);
+            sumatif2.setDeskripsiTujuanPembelajaran("Mampu melakukan penjumlahan dan pengurangan");
+            komponenNilaiRepository.save(sumatif2);
+
+            List<Siswa> siswaKelas1A = siswaRepository.findAll().stream()
+                    .filter(s -> s.getKelas().getId().equals(kelas1A.getId()))
+                    .toList();
+
+            for (Siswa s : siswaKelas1A) {
+                Double skorBab1 = 70.0 + (s.getId() * 5); 
+                NilaiSiswa nilai1 = new NilaiSiswa();
+                nilai1.setSiswa(s);
+                nilai1.setKomponenNilai(sumatif1);
+                nilai1.setNilai(skorBab1);
+                nilaiSiswaRepository.save(nilai1);
+                
+                Double skorBab2 = 80.0 + (s.getId() * 5);
+                NilaiSiswa nilai2 = new NilaiSiswa();
+                nilai2.setSiswa(s);
+                nilai2.setKomponenNilai(sumatif2);
+                nilai2.setNilai(skorBab2);
+                nilaiSiswaRepository.save(nilai2);
+
+                Double nilaiAkhir = (skorBab1 + skorBab2) / 2; 
+                RaporAkhir rapor = new RaporAkhir();
+                rapor.setSiswa(s);
+                rapor.setMapel(mtk);
+                rapor.setSemester(1);
+                rapor.setNilaiAkhir(nilaiAkhir);
+                rapor.setDeskripsiCapaian("Siswa " + s.getNamaSiswa() + " menunjukkan pemahaman sangat baik pada penjumlahan dan pengurangan serta membaca bilangan cacah.");
+                raporAkhirRepository.save(rapor);
             }
         }
     }

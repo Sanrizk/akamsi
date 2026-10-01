@@ -1,49 +1,118 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:replace="~{layout/base :: layout('Preview Rapor', ~{::content})}">
 <head>
-    <meta charset="UTF-8">
-    <title>AKAMSI - Report Card Preview</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style th:fragment="extra_css">
+        @media print {
+            #sidebar-wrapper, nav.navbar, .alert, .btn-print, .action-bar, .breadcrumb {
+                display: none !important;
+            }
+            #page-content-wrapper, .container-fluid {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .print-header {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AKAMSI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/guru/presensi">Presensi</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/guru/nilai">Nilai</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-light btn-sm mt-1" type="submit">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<body>
+<div th:fragment="content">
 
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">Report Card Preview</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Welcome to the Report Card Preview module for AKAMSI.</p>
-                
-                <!-- TODO: Insert specific tables, forms, and data iterations here -->
-                
+    <!-- Action Bar & Breadcrumb -->
+    <div class="action-bar d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Preview Kalkulasi Rapor Akhir</h3>
+            <p class="text-muted mb-0">Tinjauan nilai akhir semester seluruh siswa sebelum dicetak.</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary shadow-sm btn-print" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Cetak Rekap Nilai
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert / Status Indicator -->
+    <div class="alert alert-info border-0 shadow-sm d-flex align-items-center gap-3 action-bar" role="alert">
+        <i class="bi bi-info-circle-fill fs-4"></i>
+        <div>
+            <h6 class="alert-heading fw-bold mb-1">Status Kalkulasi</h6>
+            <p class="mb-0 small">Data ini dikalkulasi berdasarkan seluruh komponen asesmen yang telah diinputkan pada semester ini.</p>
+        </div>
+    </div>
+
+    <!-- Print Header (Hidden on screen) -->
+    <div class="print-header d-none">
+        <h4 class="fw-bold">REKAPITULASI NILAI AKHIR SEMESTER</h4>
+        <p class="mb-0">Kelas: <strong th:text="${namaKelas}">Kelas</strong> | Mata Pelajaran: <strong th:text="${namaMapel}">Mapel</strong></p>
+    </div>
+
+    <!-- Summary Table -->
+    <div class="card shadow-sm border-0 mb-5">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">Tabel Rekap Nilai Siswa</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 5%">No</th>
+                            <th style="width: 15%">NISN</th>
+                            <th style="width: 25%">Nama Siswa</th>
+                            <th class="text-center" style="width: 10%">Nilai Akhir</th>
+                            <th class="text-center" style="width: 10%">Predikat</th>
+                            <th style="width: 25%">Deskripsi Capaian</th>
+                            <th class="pe-4 text-end action-bar" style="width: 10%">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="rapor, stat : ${raporList}">
+                            <td class="ps-4 fw-medium text-muted" th:text="${stat.count}"></td>
+                            <td class="text-secondary" th:text="${rapor.siswa.nisn}"></td>
+                            <td class="fw-bold text-dark" th:text="${rapor.siswa.namaSiswa}"></td>
+                            
+                            <!-- Rata-rata Nilai Akhir -->
+                            <td class="text-center fs-5 fw-bold text-primary" th:text="${#numbers.formatDecimal(rapor.nilaiAkhir, 1, 1)}"></td>
+                            
+                            <!-- Predikat Huruf -->
+                            <td class="text-center">
+                                <span th:if="${rapor.nilaiAkhir >= 90}" class="badge bg-success fs-6">A</span>
+                                <span th:if="${rapor.nilaiAkhir >= 80 and rapor.nilaiAkhir < 90}" class="badge bg-primary fs-6">B</span>
+                                <span th:if="${rapor.nilaiAkhir >= 70 and rapor.nilaiAkhir < 80}" class="badge bg-warning text-dark fs-6">C</span>
+                                <span th:if="${rapor.nilaiAkhir < 70}" class="badge bg-danger fs-6">D</span>
+                            </td>
+                            
+                            <!-- Deskripsi Capaian Pembelajaran -->
+                            <td class="small text-muted" th:text="${rapor.deskripsiCapaian}"></td>
+                            
+                            <!-- Detail Action (Hidden in print) -->
+                            <td class="pe-4 text-end action-bar">
+                                <a th:href="@{/guru/nilai/detail-siswa/{id}(id=${rapor.siswa.id})}" class="btn btn-sm btn-light border shadow-sm" title="Lihat Breakdown Rapor Siswa">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> Detail
+                                </a>
+                            </td>
+                        </tr>
+                        
+                        <tr th:if="${raporList == null or raporList.isEmpty()}">
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-clipboard-x fs-1 d-block mb-3 text-light"></i>
+                                Belum ada data rapor yang dikalkulasi untuk kelas dan mata pelajaran ini.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div>
 </body>
 </html>

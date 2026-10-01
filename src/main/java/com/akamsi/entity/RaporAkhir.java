@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "rapor_akhir")
 public class RaporAkhir {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,8 +18,8 @@ public class RaporAkhir {
     @JoinColumn(name = "mapel_id", nullable = false)
     private MataPelajaran mapel;
 
-    @Column(nullable = false)
-    private String semester;
+    @Column(name = "semester", nullable = false)
+    private Integer semester;
 
     @Column(name = "nilai_akhir", nullable = false)
     private Double nilaiAkhir;
@@ -28,14 +29,24 @@ public class RaporAkhir {
 
     public RaporAkhir() {}
 
+    public RaporAkhir(Long id, Siswa siswa, MataPelajaran mapel, Integer semester, 
+                      Double nilaiAkhir, String deskripsiCapaian) {
+        this.id = id;
+        this.siswa = siswa;
+        this.mapel = mapel;
+        this.semester = semester;
+        this.nilaiAkhir = nilaiAkhir;
+        this.deskripsiCapaian = deskripsiCapaian;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Siswa getSiswa() { return siswa; }
     public void setSiswa(Siswa siswa) { this.siswa = siswa; }
     public MataPelajaran getMapel() { return mapel; }
     public void setMapel(MataPelajaran mapel) { this.mapel = mapel; }
-    public String getSemester() { return semester; }
-    public void setSemester(String semester) { this.semester = semester; }
+    public Integer getSemester() { return semester; }
+    public void setSemester(Integer semester) { this.semester = semester; }
     public Double getNilaiAkhir() { return nilaiAkhir; }
     public void setNilaiAkhir(Double nilaiAkhir) { this.nilaiAkhir = nilaiAkhir; }
     public String getDeskripsiCapaian() { return deskripsiCapaian; }

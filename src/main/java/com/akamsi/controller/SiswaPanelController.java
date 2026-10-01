@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Map;
+
 @Controller
 @RequestMapping("/siswa")
 public class SiswaPanelController {
@@ -20,7 +22,6 @@ public class SiswaPanelController {
         this.panelService = panelService;
     }
 
-    // Helper method to retrieve the linked Siswa entity from the logged-in User
     private Siswa getSiswaOrThrow(CustomUserDetails userDetails) {
         return panelService.getSiswaProfile(userDetails.getUser());
     }
@@ -49,14 +50,18 @@ public class SiswaPanelController {
     }
 
     @GetMapping("/rapor")
-    public String viewReportCard(@RequestParam(defaultValue = "Ganjil") String semester,
+    public String viewReportCard(@RequestParam(defaultValue = "1") Integer semester,
                                  Model model, 
                                  @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             Siswa siswa = getSiswaOrThrow(userDetails);
             model.addAttribute("siswa", siswa);
             model.addAttribute("semester", semester);
-            model.addAttribute("nilaiList", panelService.getReportCard(siswa, semester));
+            
+            // Using the new detailed wrapper map (RaporAkhir & NilaiSiswa breakdowns)
+            Map<String, Object> raporData = panelService.getRaporSiswa(siswa.getId(), semester);
+            model.addAttribute("raporData", raporData);
+            
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
         }
