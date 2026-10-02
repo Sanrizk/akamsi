@@ -146,9 +146,7 @@ public class GuruNilaiService {
                 .orElseThrow(() -> new IllegalArgumentException("Mapel not found"));
 
         List<KomponenNilai> komponenList = komponenNilaiRepository.findByKelasIdAndMapelId(kelasId, mapelId);
-        List<Siswa> siswaList = siswaRepository.findAll().stream()
-                .filter(s -> s.getKelas() != null && s.getKelas().getId().equals(kelasId))
-                .toList();
+        List<Siswa> siswaList = siswaRepository.findByKelasId(kelasId);
 
         for (Siswa s : siswaList) {
             List<NilaiSiswa> nilaiListSiswa = nilaiSiswaRepository.findBySiswaId(s.getId()).stream()
@@ -176,6 +174,11 @@ public class GuruNilaiService {
 
             RaporAkhir rapor = new RaporAkhir();
             rapor.setSiswa(s);
+            if (s.getKelas() != null) {
+                rapor.setNamaKelas(s.getKelas().getNamaKelas()); // Explicitly set snapshot Kelas to satisfy nullable=false
+            } else {
+                rapor.setNamaKelas("Tanpa Kelas");
+            }
             rapor.setMapel(mapel);
             rapor.setSemester(semester);
             rapor.setNilaiAkhir(average);

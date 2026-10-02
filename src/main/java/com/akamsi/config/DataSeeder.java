@@ -171,9 +171,7 @@ public class DataSeeder implements CommandLineRunner {
             sumatif2.setDeskripsiTujuanPembelajaran("Mampu melakukan penjumlahan dan pengurangan");
             komponenNilaiRepository.save(sumatif2);
 
-            List<Siswa> siswaKelas1A = siswaRepository.findAll().stream()
-                    .filter(s -> s.getKelas().getId().equals(kelas1A.getId()))
-                    .toList();
+            List<Siswa> siswaKelas1A = siswaRepository.findByKelasId(kelas1A.getId());
 
             for (Siswa s : siswaKelas1A) {
                 Double skorBab1 = 70.0 + (s.getId() * 5); 
@@ -193,6 +191,7 @@ public class DataSeeder implements CommandLineRunner {
                 Double nilaiAkhir = (skorBab1 + skorBab2) / 2; 
                 RaporAkhir rapor = new RaporAkhir();
                 rapor.setSiswa(s);
+                rapor.setNamaKelas(kelas1A.getNamaKelas());
                 rapor.setMapel(mtk);
                 rapor.setSemester(1);
                 rapor.setNilaiAkhir(nilaiAkhir);

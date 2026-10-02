@@ -49,25 +49,6 @@ public class SiswaPanelController {
         return "siswa/presensi-history";
     }
 
-    @GetMapping("/rapor")
-    public String viewReportCard(@RequestParam(defaultValue = "1") Integer semester,
-                                 Model model, 
-                                 @AuthenticationPrincipal CustomUserDetails userDetails) {
-        try {
-            Siswa siswa = getSiswaOrThrow(userDetails);
-            model.addAttribute("siswa", siswa);
-            model.addAttribute("semester", semester);
-            
-            // Using the new detailed wrapper map (RaporAkhir & NilaiSiswa breakdowns)
-            Map<String, Object> raporData = panelService.getRaporSiswa(siswa.getId(), semester);
-            model.addAttribute("raporData", raporData);
-            
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "siswa/rapor";
-    }
-
     @GetMapping("/spp")
     public String viewSppHistory(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {

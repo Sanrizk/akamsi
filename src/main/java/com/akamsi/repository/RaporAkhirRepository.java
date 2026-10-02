@@ -12,12 +12,34 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RaporAkhirRepository extends JpaRepository<RaporAkhir, Long> {
 
-    @Query("SELECT r FROM RaporAkhir r JOIN FETCH r.mapel WHERE r.siswa.id = :siswaId AND r.semester = :semester ORDER BY r.mapel.namaMapel ASC")
-    List<RaporAkhir> findBySiswaIdAndSemester(@Param("siswaId") Long siswaId, @Param("semester") Integer semester);
+    @Query("SELECT DISTINCT r.namaKelas FROM RaporAkhir r WHERE r.siswa.id = :siswaId ORDER BY r.namaKelas ASC")
+    List<String> findDistinctNamaKelasBySiswaId(@Param("siswaId") Long siswaId);
 
-    Optional<RaporAkhir> findBySiswaIdAndMapelIdAndSemester(Long siswaId, Long mapelId, Integer semester);
+    @Query("SELECT r FROM RaporAkhir r WHERE r.siswa.id = :siswaId AND r.namaKelas = :namaKelas AND r.semester = :semester ORDER BY r.mapel.namaMapel ASC")
+    List<RaporAkhir> findBySiswaIdAndNamaKelasAndSemester(
+            @Param("siswaId") Long siswaId,
+            @Param("namaKelas") String namaKelas,
+            @Param("semester") Integer semester
+    );
+
+    Optional<RaporAkhir> findBySiswaIdAndNamaKelasAndMapelIdAndSemester(
+            Long siswaId,
+            String namaKelas,
+            Long mapelId,
+            Integer semester
+    );
+
+    @Query("SELECT r FROM RaporAkhir r JOIN FETCH r.mapel WHERE r.siswa.id = :siswaId AND r.semester = :semester ORDER BY r.mapel.namaMapel ASC")
+    List<RaporAkhir> findBySiswaIdAndSemester(
+            @Param("siswaId") Long siswaId,
+            @Param("semester") Integer semester
+    );
 
     @Modifying
-    @Query("DELETE FROM RaporAkhir r WHERE r.siswa.id = :siswaId AND r.semester = :semester")
-    void deleteBySiswaIdAndSemester(@Param("siswaId") Long siswaId, @Param("semester") Integer semester);
+    @Query("DELETE FROM RaporAkhir r WHERE r.siswa.id = :siswaId AND r.namaKelas = :namaKelas AND r.semester = :semester")
+    void deleteBySiswaIdAndNamaKelasAndSemester(
+            @Param("siswaId") Long siswaId,
+            @Param("namaKelas") String namaKelas,
+            @Param("semester") Integer semester
+    );
 }

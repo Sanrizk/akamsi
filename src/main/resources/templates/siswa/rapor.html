@@ -1,91 +1,176 @@
 <!DOCTYPE html>
-<html th:replace="~{layout/base :: layout('Rapor Digital', ~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Rapor Akademik Siswa', ~{::content})}">
 <head>
-    <style th:fragment="extra_css">
-        @media print {
-            /* Hide the sidebar, header, flash messages, and standard buttons when printing */
-            #sidebar-wrapper, nav.navbar, .alert, .btn-print, .dropdown-form {
-                display: none !important;
-            }
-            /* Expand content to full width */
-            #page-content-wrapper, .container-fluid {
-                padding: 0 !important;
-                margin: 0 !important;
-                width: 100% !important;
-            }
-            .card {
-                border: none !important;
-                box-shadow: none !important;
-            }
-        }
-    </style>
+  <title>Rapor Akademik Siswa</title>
 </head>
 <body>
-<div th:fragment="content">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-1">Rapor Digital</h3>
-            <p class="text-muted mb-0">Capaian hasil belajar akhir semester.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <!-- Semester Dropdown Form -->
-            <form class="d-flex dropdown-form" th:action="@{/siswa/rapor}" method="get">
-                <select name="semester" class="form-select shadow-sm" onchange="this.form.submit()">
-                    <option value="1" th:selected="${semester == 1}">Semester Ganjil (1)</option>
-                    <option value="2" th:selected="${semester == 2}">Semester Genap (2)</option>
-                </select>
-            </form>
-            <button class="btn btn-outline-primary btn-print" onclick="window.print()">
-                <i class="bi bi-printer-fill me-1"></i> Cetak Rapor
+  <div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+      <div>
+        <h4 class="mb-0 fw-bold">Rapor & Transkrip Akademik</h4>
+        <small class="text-muted">Riwayat capaian hasil belajar siswa per tingkat kelas dan semester</small>
+      </div>
+      <div>
+        <button onclick="window.print()" class="btn btn-outline-dark">
+          <i class="bi bi-printer me-1"></i> Cetak Rapor
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Card (Hidden during print) -->
+    <div class="card shadow-sm mb-4 no-print">
+      <div class="card-body">
+        <form th:action="@{/siswa/rapor}" method="get" class="row g-3 align-items-end">
+          <div class="col-md-5">
+            <label for="selectKelas" class="form-label fw-bold">Pilih Tingkat / Kelas</label>
+            <select id="selectKelas" name="namaKelas" class="form-select" required>
+              <option th:each="nama : ${availableClassNames}"
+                      th:value="${nama}"
+                      th:text="${nama}"
+                      th:selected="${selectedNamaKelas != null and selectedNamaKelas == nama}">
+                Kelas 1A
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-5">
+            <label for="selectSemester" class="form-label fw-bold">Pilih Semester</label>
+            <select id="selectSemester" name="semester" class="form-select" required>
+              <option value="1" th:selected="${selectedSemester == 1}">Semester 1 (Ganjil)</option>
+              <option value="2" th:selected="${selectedSemester == 2}">Semester 2 (Genap)</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-search me-1"></i> Tampilkan
             </button>
-        </div>
+          </div>
+        </form>
+      </div>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white py-4 border-bottom-0 text-center">
-            <h4 class="mb-0 fw-bold">RAPOR HASIL BELAJAR</h4>
-            <p class="text-muted mb-0">Nama: <strong class="text-dark" th:text="${siswa.namaSiswa}"></strong> | NISN: <span th:text="${siswa.nisn}"></span></p>
+    <!-- Student Biodata Header Card -->
+    <div class="card shadow-sm border-0 mb-4 print-card">
+      <div class="card-header bg-light py-3 border-bottom d-flex justify-content-between align-items-center">
+        <div class="fw-bold fs-6">
+          <i class="bi bi-person-lines-fill text-primary me-2"></i>BIODATA PESERTA DIDIK
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4" style="width: 5%">No</th>
-                            <th style="width: 25%">Mata Pelajaran</th>
-                            <th class="text-center" style="width: 15%">Nilai Akhir</th>
-                            <th class="text-center" style="width: 15%">Predikat</th>
-                            <th class="pe-4" style="width: 40%">Deskripsi Capaian</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Loop over RaporAkhir records -->
-                        <tr th:each="r, stat : ${raporData['raporAkhir']}">
-                            <td class="ps-4 fw-medium text-muted" th:text="${stat.count}"></td>
-                            <td class="fw-bold text-dark" th:text="${r.mapel.namaMapel}"></td>
-                            <td class="text-center fs-5 fw-bold text-primary" th:text="${#numbers.formatDecimal(r.nilaiAkhir, 1, 1)}"></td>
-                            <td class="text-center">
-                                <span th:if="${r.nilaiAkhir >= 90}" class="badge bg-success fs-6">A</span>
-                                <span th:if="${r.nilaiAkhir >= 80 and r.nilaiAkhir < 90}" class="badge bg-primary fs-6">B</span>
-                                <span th:if="${r.nilaiAkhir >= 70 and r.nilaiAkhir < 80}" class="badge bg-warning text-dark fs-6">C</span>
-                                <span th:if="${r.nilaiAkhir < 70}" class="badge bg-danger fs-6">D</span>
-                            </td>
-                            <td class="pe-4 text-muted small" th:text="${r.deskripsiCapaian}"></td>
-                        </tr>
-                        
-                        <tr th:if="${raporData['raporAkhir'] == null or raporData['raporAkhir'].isEmpty()}">
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="bi bi-file-earmark-x fs-1 d-block mb-2 text-light"></i>
-                                Rapor belum tersedia atau belum dikalkulasi untuk semester ini.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div>
+          <span class="badge bg-primary fs-6" th:text="${selectedNamaKelas != '' ? selectedNamaKelas : '-'}">Kelas 1A</span>
+          <span class="badge bg-secondary fs-6" th:text="'Semester ' + ${selectedSemester}">Semester 1</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="row mb-2">
+              <div class="col-sm-4 text-muted">Nama Lengkap</div>
+              <div class="col-sm-8 fw-bold" th:text="${siswa.namaSiswa}">Ahmad Dahlan</div>
             </div>
+            <div class="row mb-2">
+              <div class="col-sm-4 text-muted">NISN</div>
+              <div class="col-sm-8 fw-semibold" th:text="${siswa.nisn}">0012345678</div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="row mb-2">
+              <div class="col-sm-4 text-muted">Nama Wali / Ortu</div>
+              <div class="col-sm-8" th:text="${siswa.namaOrangTua}">Siti Aminah</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-sm-4 text-muted">Status Belajar</div>
+              <div class="col-sm-8">
+                <span class="badge bg-success">Aktif</span>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
-</div>
+    <!-- Empty State -->
+    <div th:if="${#lists.isEmpty(raporList)}" class="alert alert-info text-center py-4">
+      <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+      Belum ada data nilai rapor untuk <strong><span th:text="${selectedNamaKelas}"></span> - Semester <span th:text="${selectedSemester}"></span></strong>.
+    </div>
+
+    <!-- Report Table Section -->
+    <div th:if="${!#lists.isEmpty(raporList)}">
+      <div class="card shadow-sm border-0 mb-4 print-card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+              <thead class="table-light">
+                <tr class="text-center">
+                  <th style="width: 5%;">No</th>
+                  <th style="width: 25%;">Mata Pelajaran</th>
+                  <th style="width: 12%;">Nilai Akhir</th>
+                  <th style="width: 10%;">Predikat</th>
+                  <th>Capaian Kompetensi / Pembelajaran</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="r, stat : ${raporList}">
+                  <td class="text-center" th:text="${stat.count}">1</td>
+                  <td class="fw-bold" th:text="${r.mapel.namaMapel}">Matematika</td>
+                  <td class="text-center fw-bold fs-6" th:text="${r.nilaiAkhir != null ? #numbers.formatDecimal(r.nilaiAkhir, 1, 'POINT', 1, 'COMMA') : '-'}">88.5</td>
+                  <td class="text-center">
+                    <span th:if="${r.predikat == 'A'}" class="badge bg-success fs-6">A</span>
+                    <span th:if="${r.predikat == 'B'}" class="badge bg-primary fs-6">B</span>
+                    <span th:if="${r.predikat == 'C'}" class="badge bg-warning text-dark fs-6">C</span>
+                    <span th:if="${r.predikat == 'D'}" class="badge bg-danger fs-6">D</span>
+                  </td>
+                  <td class="small" th:text="${r.deskripsiCapaian}">Menunjukkan penguasaan materi yang sangat baik.</td>
+                </tr>
+              </tbody>
+              <tfoot class="table-light">
+                <tr class="fw-bold">
+                  <td colspan="2" class="text-end">RATA-RATA NILAI AKHIR:</td>
+                  <td class="text-center text-primary fs-5" th:text="${#numbers.formatDecimal(rataRata, 1, 'POINT', 1, 'COMMA')}">85.0</td>
+                  <td colspan="2" class="text-muted small">Dihitung otomatis dari seluruh mata pelajaran yang telah dinilai.</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signature Section for Print Layout -->
+      <div class="row mt-5 pt-4 d-none d-print-flex">
+        <div class="col-6 text-center">
+          <p class="mb-5">Mengetahui,<br>Orang Tua / Wali Siswa</p>
+          <p class="fw-bold text-decoration-underline mb-0">( ............................................ )</p>
+        </div>
+        <div class="col-6 text-center">
+          <p class="mb-5">Wali Kelas / Guru Pengajar</p>
+          <p class="fw-bold text-decoration-underline mb-0">( ............................................ )</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Print Media Styles -->
+    <style>
+      @media print {
+        .navbar, .sidebar, .btn, .breadcrumb, form, .no-print {
+          display: none !important;
+        }
+        .print-card {
+          border: 1px solid #dee2e6 !important;
+          box-shadow: none !important;
+          margin-bottom: 20px !important;
+        }
+        .badge {
+          border: 1px solid #000;
+          color: #000 !important;
+          background: transparent !important;
+        }
+        body {
+          background-color: #fff !important;
+          font-size: 12pt;
+        }
+      }
+    </style>
+  </div>
 </body>
 </html>
