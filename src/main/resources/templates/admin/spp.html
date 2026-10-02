@@ -1,176 +1,262 @@
 <!DOCTYPE html>
-<html th:replace="~{layout/base :: layout('Manajemen SPP', ~{::content})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Kelola Pembayaran SPP', ~{::content})}">
+<head>
+  <title>Kelola Pembayaran SPP</title>
+</head>
 <body>
-<div th:fragment="content">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-1">Manajemen SPP Siswa</h3>
-            <p class="text-muted mb-0">Cari siswa dan kelola tagihan SPP bulanan.</p>
-        </div>
+  <div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="mb-0 fw-bold">Manajemen Pembayaran SPP</h4>
+        <small class="text-muted">Pencatatan, penonaktifan, dan monitoring tagihan SPP siswa</small>
+      </div>
+      <div>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalGenerateSpp">
+          <i class="bi bi-calendar-plus me-1"></i> Generate Tagihan SPP
+        </button>
+      </div>
     </div>
 
-    <!-- Flash Messages -->
-    <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle me-1"></i> <span th:text="${success}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="bi bi-exclamation-triangle me-1"></i> <span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
     <!-- Filter Card -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-funnel text-primary me-2"></i>Filter Tagihan Siswa</h5>
-        </div>
-        <div class="card-body bg-light">
-            <form th:action="@{/admin/spp}" method="get" class="row g-3 align-items-end">
-                <div class="col-md-5">
-                    <label class="form-label small fw-semibold">Pilih Kelas</label>
-                    <select id="selectKelas" name="kelasId" class="form-select" required>
-                        <option value="" disabled th:selected="${selectedKelasId == null}">-- Pilih Kelas --</option>
-                        <option th:each="k : ${kelasList}" 
-                                th:value="${k.id}" 
-                                th:text="${k.namaKelas}"
-                                th:selected="${selectedKelasId != null and selectedKelasId == k.id}"></option>
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label small fw-semibold">Pilih Siswa</label>
-                    <select id="selectSiswa" name="siswaId" class="form-select" required th:disabled="${siswaList == null}">
-                        <option value="" disabled th:selected="${selectedSiswa == null}">-- Pilih Siswa --</option>
-                        <option th:if="${siswaList != null}" th:each="s : ${siswaList}" 
-                                th:value="${s.id}" 
-                                th:text="'[' + ${s.nisn} + '] ' + ${s.namaSiswa}"
-                                th:selected="${selectedSiswa != null and selectedSiswa.id == s.id}"></option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100 shadow-sm">
-                        <i class="bi bi-search me-1"></i> Tampilkan
-                    </button>
-                </div>
-            </form>
-        </div>
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <form th:action="@{/admin/spp}" method="get" class="row g-3 align-items-end">
+          <div class="col-md-5">
+            <label for="selectKelas" class="form-label fw-bold">Pilih Kelas</label>
+            <select id="selectKelas" name="kelasId" class="form-select" required>
+              <option value="" disabled th:selected="${param.kelasId == null}">-- Pilih Kelas --</option>
+              <option th:each="k : ${kelasList}"
+                      th:value="${k.id}"
+                      th:text="${k.namaKelas}"
+                      th:selected="${param.kelasId != null and #strings.equals(param.kelasId, k.id.toString())}">
+                Kelas 1A
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-5">
+            <label for="selectSiswa" class="form-label fw-bold">Pilih Siswa</label>
+            <select id="selectSiswa" name="siswaId" class="form-select" required>
+              <option value="" disabled th:selected="${selectedSiswa == null}">-- Pilih Siswa --</option>
+              <option th:each="s : ${siswaList}"
+                      th:value="${s.id}"
+                      th:text="'[' + ${s.nisn} + '] ' +${s.namaSiswa}"
+                      th:selected="${selectedSiswa != null and selectedSiswa.id == s.id}">
+                [001] Budi
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-search me-1"></i> Tampilkan
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Empty State -->
-    <div th:if="${selectedSiswa == null}">
-        <div class="alert alert-info text-center border-0 shadow-sm py-4">
-            <i class="bi bi-info-circle me-2"></i> Silakan pilih Kelas dan Siswa terlebih dahulu untuk melihat dan mengelola tagihan SPP.
-        </div>
+    <div th:if="${selectedSiswa == null}" class="alert alert-info text-center py-4">
+      <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+      Silakan pilih <strong>Kelas</strong> dan <strong>Siswa</strong> terlebih dahulu untuk melihat serta mencatat pembayaran SPP.
     </div>
 
-    <!-- Student Info & SPP Table Section -->
-    <div th:if="${selectedSiswa != null}" class="card shadow-sm border-0 mb-4">
-        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="mb-1 fw-bold">Tagihan SPP: <span class="text-primary" th:text="${selectedSiswa.namaSiswa}"></span></h5>
-                <span class="badge bg-secondary me-2" th:text="'NISN: ' + ${selectedSiswa.nisn}"></span>
-                <span class="badge bg-info text-dark" th:text="'Kelas: ' + (${selectedSiswa.kelas != null ? selectedSiswa.kelas.namaKelas : '-'})"></span>
-            </div>
+    <!-- Payment Records Section -->
+    <div th:if="${selectedSiswa != null}">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted">Data Siswa:</span>
+            <strong class="ms-1" th:text="${selectedSiswa.namaSiswa}">Nama Siswa</strong>
+            <span class="badge bg-secondary ms-2" th:text="'NISN: ' + ${selectedSiswa.nisn}">NISN</span>
+            <span class="badge bg-primary ms-1" th:text="${selectedSiswa.kelas.namaKelas}">Kelas 1A</span>
+          </div>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">No</th>
-                            <th>Bulan</th>
-                            <th>Tahun</th>
-                            <th>Jumlah Tagihan</th>
-                            <th>Tanggal Bayar</th>
-                            <th>Status</th>
-                            <th>Dicatat Oleh</th>
-                            <th class="pe-4 text-end">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="p, iter : ${pembayaranList}">
-                            <td class="ps-4 text-muted" th:text="${iter.count}"></td>
-                            <td class="fw-bold text-dark" th:text="${p.bulan}"></td>
-                            <td th:text="${p.tahun}"></td>
-                            <td class="fw-semibold text-primary">Rp <span th:text="${#numbers.formatDecimal(p.jumlahBayar, 0, 'COMMA', 0, 'POINT')}"></span></td>
-                            <td th:text="${p.tanggalBayar != null ? #temporals.format(p.tanggalBayar, 'dd-MM-yyyy') : '-'}"></td>
-                            <td>
-                                <span th:if="${p.status.name() == 'LUNAS'}" class="badge bg-success">LUNAS</span>
-                                <span th:if="${p.status.name() == 'BELUM_LUNAS'}" class="badge bg-warning text-dark">BELUM LUNAS</span>
-                            </td>
-                            <td th:text="${p.admin != null ? p.admin.namaLengkap : '-'}"></td>
-                            <td class="pe-4 text-end text-nowrap">
-                                <!-- LUNAS -> Batalkan -->
-                                <form th:if="${p.status.name() == 'LUNAS'}" th:action="@{/admin/spp/void/{id}(id=${p.id})}" method="post" class="d-inline">
-                                    <input type="hidden" name="kelasId" th:value="${selectedKelasId}">
-                                    <input type="hidden" name="siswaId" th:value="${selectedSiswa.id}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Batalkan status pembayaran ini?')">
-                                        <i class="bi bi-x-circle"></i> Batalkan
-                                    </button>
-                                </form>
+          <div th:if="${#lists.isEmpty(pembayaranList)}" class="alert alert-warning m-3 text-center">
+            <i class="bi bi-exclamation-triangle me-1"></i> Belum ada tagihan SPP untuk siswa ini. Silakan gunakan tombol <strong>"Generate Tagihan SPP"</strong> di atas.
+          </div>
 
-                                <!-- BELUM LUNAS -> Bayar -->
-                                <form th:if="${p.status.name() == 'BELUM_LUNAS'}" th:action="@{/admin/spp/pay/{id}(id=${p.id})}" method="post" class="d-inline">
-                                    <input type="hidden" name="kelasId" th:value="${selectedKelasId}">
-                                    <input type="hidden" name="siswaId" th:value="${selectedSiswa.id}">
-                                    <button type="submit" class="btn btn-sm btn-success shadow-sm" onclick="return confirm('Konfirmasi pembayaran SPP bulan ini?')">
-                                        <i class="bi bi-check-circle"></i> Bayar
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr th:if="${pembayaranList == null or pembayaranList.isEmpty()}">
-                            <td colspan="8" class="text-center py-5 text-muted">Belum ada data tagihan SPP untuk siswa ini.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+          <div th:if="${!#lists.isEmpty(pembayaranList)}" class="table-responsive">
+            <table class="table table-bordered table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 5%;" class="text-center">No</th>
+                  <th>Bulan</th>
+                  <th>Tahun</th>
+                  <th>Nominal</th>
+                  <th>Tanggal Bayar</th>
+                  <th>Status</th>
+                  <th>Dicatat Oleh</th>
+                  <th style="width: 28%;" class="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="p, stat : ${pembayaranList}">
+                  <td class="text-center" th:text="${stat.count}">1</td>
+                  <td class="fw-bold" th:text="${p.bulan}">Januari</td>
+                  <td th:text="${p.tahun}">2026</td>
+                  <td th:text="'Rp ' + ${#numbers.formatDecimal(p.jumlahBayar, 0, 'POINT', 0, 'COMMA')}">Rp 150.000</td>
+                  <td th:text="${p.tanggalBayar != null ? #temporals.format(p.tanggalBayar, 'dd-MM-yyyy') : '-'}">-</td>
+                  <td>
+                    <span th:if="${p.status.name() == 'LUNAS'}" class="badge bg-success">LUNAS</span>
+                    <span th:if="${p.status.name() == 'BELUM_LUNAS'}" class="badge bg-warning text-dark">BELUM LUNAS</span>
+                    <span th:if="${p.status.name() == 'BATAL'}" class="badge bg-secondary">NONAKTIF / BATAL</span>
+                  </td>
+                  <td th:text="${p.admin != null ? p.admin.namaLengkap : '-'}">-</td>
+                  <td class="text-center">
+                    <!-- Actions if BELUM_LUNAS -->
+                    <div th:if="${p.status.name() == 'BELUM_LUNAS'}" class="d-inline-flex gap-1">
+                      <form th:action="@{/admin/spp/pay/{id}(id=${p.id})}" method="post">
+                        <input type="hidden" name="kelasId" th:value="${selectedSiswa.kelas.id}" />
+                        <input type="hidden" name="siswaId" th:value="${selectedSiswa.id}" />
+                        <button type="submit" class="btn btn-sm btn-success"
+                                onclick="return confirm('Konfirmasi pembayaran SPP bulan ini?')">
+                          <i class="bi bi-check-circle"></i> Bayar
+                        </button>
+                      </form>
+
+                      <form th:action="@{/admin/spp/nonaktifkan/{id}(id=${p.id})}" method="post">
+                        <input type="hidden" name="kelasId" th:value="${selectedSiswa.kelas.id}" />
+                        <input type="hidden" name="siswaId" th:value="${selectedSiswa.id}" />
+                        <button type="submit" class="btn btn-sm btn-outline-warning text-dark"
+                                onclick="return confirm('Nonaktifkan tagihan bulan ini?')">
+                          <i class="bi bi-slash-circle"></i> Nonaktifkan
+                        </button>
+                      </form>
+
+                      <form th:action="@{/admin/spp/delete/{id}(id=${p.id})}" method="post">
+                        <input type="hidden" name="kelasId" th:value="${selectedSiswa.kelas.id}" />
+                        <input type="hidden" name="siswaId" th:value="${selectedSiswa.id}" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Hapus permanen tagihan ini?')">
+                          <i class="bi bi-trash"></i> Hapus
+                        </button>
+                      </form>
+                    </div>
+
+                    <!-- Actions if LUNAS -->
+                    <div th:if="${p.status.name() == 'LUNAS'}" class="d-inline-flex gap-1">
+                      <form th:action="@{/admin/spp/void/{id}(id=${p.id})}" method="post">
+                        <input type="hidden" name="kelasId" th:value="${selectedSiswa.kelas.id}" />
+                        <input type="hidden" name="siswaId" th:value="${selectedSiswa.id}" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Batalkan status lunas tagihan ini?')">
+                          <i class="bi bi-x-circle"></i> Batalkan Lunas
+                        </button>
+                      </form>
+                    </div>
+
+                    <!-- Actions if BATAL -->
+                    <div th:if="${p.status.name() == 'BATAL'}" class="d-inline-flex gap-1">
+                      <form th:action="@{/admin/spp/aktifkan/{id}(id=${p.id})}" method="post">
+                        <input type="hidden" name="kelasId" th:value="${selectedSiswa.kelas.id}" />
+                        <input type="hidden" name="siswaId" th:value="${selectedSiswa.id}" />
+                        <button type="submit" class="btn btn-sm btn-outline-primary"
+                                onclick="return confirm('Aktifkan kembali tagihan ini?')">
+                          <i class="bi bi-arrow-counterclockwise"></i> Aktifkan
+                        </button>
+                      </form>
+
+                      <form th:action="@{/admin/spp/delete/{id}(id=${p.id})}" method="post">
+                        <input type="hidden" name="kelasId" th:value="${selectedSiswa.kelas.id}" />
+                        <input type="hidden" name="siswaId" th:value="${selectedSiswa.id}" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Hapus permanen tagihan yang dibatalkan ini?')">
+                          <i class="bi bi-trash"></i> Hapus
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Client-Side Script for Cascading Dropdown -->
+    <!-- Modal Generate SPP -->
+    <div class="modal fade" id="modalGenerateSpp" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form th:action="@{/admin/spp/generate}" method="post">
+            <div class="modal-header">
+              <h5 class="modal-title"><i class="bi bi-calendar-plus me-1"></i> Generate Tagihan SPP</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="alert alert-info py-2 small mb-3">
+                <i class="bi bi-info-circle me-1"></i> Sistem akan membuat tagihan 12 bulan (Januari - Desember) berstatus <strong>BELUM LUNAS</strong>. Tagihan yang sudah ada tidak akan diduplikasi.
+              </div>
+
+              <div class="mb-3">
+                <label for="generateKelasId" class="form-label fw-bold">Target Kelas</label>
+                <select id="generateKelasId" name="kelasId" class="form-select">
+                  <option value="">-- Semua Kelas (Seluruh Siswa) --</option>
+                  <option th:each="k : ${kelasList}" th:value="${k.id}" th:text="${k.namaKelas}">Kelas 1A</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="generateTahun" class="form-label fw-bold">Tahun Tagihan</label>
+                <input type="number" id="generateTahun" name="tahun" class="form-control" th:value="${currentYear}" required />
+              </div>
+
+              <div class="mb-3">
+                <label for="generateNominal" class="form-label fw-bold">Nominal SPP per Bulan (Rp)</label>
+                <input type="number" id="generateNominal" name="nominal" class="form-control" step="1000" th:value="${defaultNominal}" required />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-success">Mulai Generate Tagihan</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script for Dynamic Cascading Dropdown -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const selectKelas = document.getElementById('selectKelas');
-            const selectSiswa = document.getElementById('selectSiswa');
+      document.getElementById('selectKelas').addEventListener('change', function () {
+        const kelasId = this.value;
+        const siswaSelect = document.getElementById('selectSiswa');
 
-            if (selectKelas && selectSiswa) {
-                selectKelas.addEventListener('change', function() {
-                    const kelasId = this.value;
-                    if (!kelasId) {
-                        selectSiswa.innerHTML = '<option value="" disabled selected>-- Pilih Siswa --</option>';
-                        selectSiswa.disabled = true;
-                        return;
-                    }
+        siswaSelect.innerHTML = '<option value="" disabled selected>Memuat data siswa...</option>';
+        siswaSelect.disabled = true;
 
-                    selectSiswa.disabled = true;
-                    selectSiswa.innerHTML = '<option value="" disabled selected>-- Memuat Data Siswa... --</option>';
+        if (!kelasId) return;
 
-                    fetch('/admin/spp/api/siswa-by-kelas?kelasId=' + kelasId)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            selectSiswa.innerHTML = '<option value="" disabled selected>-- Pilih Siswa --</option>';
-                            data.forEach(siswa => {
-                                const option = document.createElement('option');
-                                option.value = siswa.id;
-                                option.textContent = '[' + siswa.nisn + '] ' + siswa.namaSiswa;
-                                selectSiswa.appendChild(option);
-                            });
-                            selectSiswa.disabled = false;
-                        })
-                        .catch(error => {
-                            console.error('Fetch error:', error);
-                            selectSiswa.innerHTML = '<option value="" disabled selected>-- Gagal memuat data --</option>';
-                        });
-                });
-            }
-        });
+        fetch('/admin/spp/api/siswa-by-kelas?kelasId=' + kelasId)
+          .then(response => response.json())
+          .then(data => {
+            siswaSelect.innerHTML = '<option value="" disabled selected>-- Pilih Siswa --</option>';
+            data.forEach(item => {
+              const opt = document.createElement('option');
+              opt.value = item.id;
+              opt.textContent = '[' + item.nisn + '] ' + item.namaSiswa;
+              siswaSelect.appendChild(opt);
+            });
+            siswaSelect.disabled = false;
+          })
+          .catch(err => {
+            console.error('Gagal mengambil data siswa:', err);
+            siswaSelect.innerHTML = '<option value="" disabled selected>Gagal memuat data</option>';
+          });
+      });
     </script>
-</div>
+  </div>
 </body>
 </html>
