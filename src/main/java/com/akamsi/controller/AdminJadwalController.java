@@ -1,104 +1,73 @@
 package com.akamsi.controller;
 
-import com.akamsi.dto.JadwalPelajaranFormDTO;
-import com.akamsi.entity.*;
-import com.akamsi.repository.*;
+import com.akamsi.entity.JadwalPelajaran;
+import com.akamsi.entity.Kelas;
+import com.akamsi.repository.JadwalPelajaranRepository;
+import com.akamsi.service.AkademikService;
+import com.akamsi.service.JadwalGeneratorService;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Controller
-@RequestMapping("/admin/akademik/jadwal")
+@RequestMapping("/admin/jadwal")
 public class AdminJadwalController {
 
-    private final JadwalPelajaranRepository jadwalPelajaranRepository;
-    private final GuruRepository guruRepository;
-    private final KelasRepository kelasRepository;
-    private final MataPelajaranRepository mapelRepository;
+    @Autowired
+    private JadwalPelajaranRepository jadwalPelajaranRepository;
 
-    public AdminJadwalController(JadwalPelajaranRepository jadwalPelajaranRepository,
-                                 GuruRepository guruRepository,
-                                 KelasRepository kelasRepository,
-                                 MataPelajaranRepository mapelRepository) {
-        this.jadwalPelajaranRepository = jadwalPelajaranRepository;
-        this.guruRepository = guruRepository;
-        this.kelasRepository = kelasRepository;
-        this.mapelRepository = mapelRepository;
-    }
+    @Autowired
+    private AkademikService akademikService;
+
+    @Autowired
+    private JadwalGeneratorService jadwalGeneratorService;
 
     @GetMapping
-    public String viewJadwal(@RequestParam(required = false) Long kelasId, Model model) {
-        model.addAttribute("kelasList", kelasRepository.findAll());
-        model.addAttribute("guruList", guruRepository.findAll());
-        model.addAttribute("mapelList", mapelRepository.findAll());
-        model.addAttribute("hariList", Arrays.asList(Hari.values()));
-        
-        if (kelasId != null) {
-            model.addAttribute("selectedKelasId", kelasId);
-            Kelas selectedKelas = kelasRepository.findById(kelasId).orElse(null);
-            model.addAttribute("selectedKelas", selectedKelas);
-            
-            List<JadwalPelajaran> jadwalList = jadwalPelajaranRepository.findAll().stream()
-                    .filter(j -> j.getKelas() != null && j.getKelas().getId().equals(kelasId))
-                    .collect(Collectors.toList());
-            model.addAttribute("jadwalList", jadwalList);
+    public String index(
+            @RequestParam(required = false) Long kelasId,
+            Model model) {
+
+        List<Kelas> kelasList = akademikService.getAllKelas();
+        Long selectedKelasId = (kelasId != null) ? kelasId : (!kelasList.isEmpty() ? kelasList.get(0).getId() : null);
+
+        List<JadwalPelajaran> jadwalList = List.of();
+        Kelas selectedKelas = null;
+
+        if (selectedKelasId != null) {
+            selectedKelas = akademikService.findKelasById(selectedKelasId);
+            jadwalList = jadwalPelajaranRepository.findByKelasIdOrderByHariAscJamMulaiAsc(selectedKelasId);
         }
 
-        return "admin/akademik/jadwal";
+        model.addAttribute("kelasList", kelasList);
+        model.addAttribute("selectedKelasId", selectedKelasId);
+        model.addAttribute("selectedKelas", selectedKelas);
+        model.addAttribute("jadwalList", jadwalList);
+        model.addAttribute("totalJadwalSemua", jadwalPelajaranRepository.count());
+
+        return "admin/jadwal";
     }
 
-    @PostMapping("/add")
-    public String addJadwal(@ModelAttribute JadwalPelajaranFormDTO dto, RedirectAttributes ra) {
-        try {
-            JadwalPelajaran jp = new JadwalPelajaran();
-            jp.setGuru(guruRepository.findById(dto.getGuruId()).orElseThrow(() -> new RuntimeException("Guru tidak ditemukan")));
-            jp.setKelas(kelasRepository.findById(dto.getKelasId()).orElseThrow(() -> new RuntimeException("Kelas tidak ditemukan")));
-            jp.setMapel(mapelRepository.findById(dto.getMapelId()).orElseThrow(() -> new RuntimeException("Mapel tidak ditemukan")));
-            jp.setHari(dto.getHari());
-            jp.setJamMulai(LocalTime.parse(dto.getJamMulai()));
-            jp.setJamSelesai(LocalTime.parse(dto.getJamSelesai()));
-            
-            jadwalPelajaranRepository.save(jp);
-            ra.addFlashAttribute("success", "Jadwal pelajaran berhasil ditambahkan.");
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", "Gagal menambahkan jadwal: " + e.getMessage());
-        }
-        return "redirect:/admin/akademik/jadwal?kelasId=" + dto.getKelasId();
-    }
+    @PostMapping("/generate")
+    public String generateOtomatis(
+            @RequestParam(value = "resetJadwalLama", defaultValue = "true") boolean resetJadwalLama,
+            RedirectAttributes redirectAttributes) {
 
-    @PostMapping("/edit/{id}")
-    public String editJadwal(@PathVariable Long id, @ModelAttribute JadwalPelajaranFormDTO dto, RedirectAttributes ra) {
         try {
-            JadwalPelajaran jp = jadwalPelajaranRepository.findById(id).orElseThrow(() -> new RuntimeException("Jadwal tidak ditemukan"));
-            jp.setGuru(guruRepository.findById(dto.getGuruId()).orElseThrow(() -> new RuntimeException("Guru tidak ditemukan")));
-            jp.setKelas(kelasRepository.findById(dto.getKelasId()).orElseThrow(() -> new RuntimeException("Kelas tidak ditemukan")));
-            jp.setMapel(mapelRepository.findById(dto.getMapelId()).orElseThrow(() -> new RuntimeException("Mapel tidak ditemukan")));
-            jp.setHari(dto.getHari());
-            jp.setJamMulai(LocalTime.parse(dto.getJamMulai()));
-            jp.setJamSelesai(LocalTime.parse(dto.getJamSelesai()));
-            
-            jadwalPelajaranRepository.save(jp);
-            ra.addFlashAttribute("success", "Jadwal pelajaran berhasil diperbarui.");
+            int totalGenerated = jadwalGeneratorService.generateJadwalOtomatis(resetJadwalLama);
+            redirectAttributes.addFlashAttribute("success",
+                    "Generator Berhasil! Sebanyak " + totalGenerated + " sesi mata pelajaran berhasil disusun otomatis bebas bentrok.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", "Prasyarat belum terpenuhi: " + e.getMessage());
         } catch (Exception e) {
-            ra.addFlashAttribute("error", "Gagal memperbarui jadwal: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Gagal menyusun jadwal otomatis: " + e.getMessage());
         }
-        return "redirect:/admin/akademik/jadwal?kelasId=" + dto.getKelasId();
-    }
 
-    @PostMapping("/delete/{id}")
-    public String deleteJadwal(@PathVariable Long id, @RequestParam Long kelasId, RedirectAttributes ra) {
-        try {
-            jadwalPelajaranRepository.deleteById(id);
-            ra.addFlashAttribute("success", "Jadwal pelajaran berhasil dihapus.");
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", "Gagal menghapus jadwal: " + e.getMessage());
-        }
-        return "redirect:/admin/akademik/jadwal?kelasId=" + kelasId;
+        return "redirect:/admin/jadwal";
     }
 }

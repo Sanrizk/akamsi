@@ -18,6 +18,8 @@ public interface JadwalPelajaranRepository extends JpaRepository<JadwalPelajaran
     @Query("SELECT j FROM JadwalPelajaran j WHERE j.guru.user.id = :userId ORDER BY j.hari ASC, j.jamMulai ASC")
     List<JadwalPelajaran> findByGuruUserId(@Param("userId") Long userId);
 
+    List<JadwalPelajaran> findByKelasIdOrderByHariAscJamMulaiAsc(Long kelasId);
+
     @Query("SELECT DISTINCT j.kelas FROM JadwalPelajaran j WHERE j.guru.user.id = :userId ORDER BY j.kelas.namaKelas ASC")
     List<Kelas> findDistinctKelasByUserId(@Param("userId") Long userId);
 
