@@ -118,6 +118,8 @@ public class AdminUserController {
                     
             userRepository.delete(user);
             ra.addFlashAttribute("success", "Pengguna berhasil dihapus.");
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            ra.addFlashAttribute("error", "Gagal menghapus: Akun ini tidak dapat dihapus karena masih terhubung dengan profil Guru atau Siswa aktif. Silakan hapus profil terkait di menu Master Data terlebih dahulu.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Gagal menghapus pengguna: " + e.getMessage());
         }
