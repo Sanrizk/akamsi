@@ -54,6 +54,8 @@ public class AdminSiswaController {
         try {
             siswaService.deleteSiswa(id);
             ra.addFlashAttribute("success", "Siswa dan akun terkait berhasil dihapus.");
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            ra.addFlashAttribute("error", "Gagal menghapus: Data siswa ini tidak dapat dihapus karena masih memiliki riwayat Presensi, Nilai Rapor, atau Tagihan SPP. Hapus data terkait terlebih dahulu.");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Gagal: " + e.getMessage());
         }
