@@ -11,6 +11,7 @@
     <div class="p-3 flex-grow-1 overflow-auto">
         <ul class="nav nav-pills flex-column gap-1">
             <div sec:authorize="hasRole('ADMIN')">
+                <li class="nav-item"><a href="/admin/dashboard" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-speedometer2 me-3"></i> Dashboard Admin</a></li>
                 <li class="nav-item"><a href="/admin/users" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-people-fill me-3"></i> Kelola Users</a></li>
                 <li class="nav-item"><a href="/admin/siswa" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-person-lines-fill me-3"></i> Data Siswa</a></li>
                 <li class="nav-item"><a href="/admin/kelas" class="nav-link text-dark py-2 px-3 rounded-3 d-flex align-items-center"><i class="bi bi-door-open-fill me-3"></i> Kelas</a></li>

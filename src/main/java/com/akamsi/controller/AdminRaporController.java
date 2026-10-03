@@ -89,4 +89,19 @@ public class AdminRaporController {
 
         return "admin/rapor";
     }
+
+    @GetMapping("/api/siswa-by-kelas")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public List<java.util.Map<String, Object>> getSiswaByKelasApi(@RequestParam Long kelasId) {
+        List<Siswa> siswaList = siswaRepository.findByKelasId(kelasId);
+        List<java.util.Map<String, Object>> response = new ArrayList<>();
+        for (Siswa s : siswaList) {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", s.getId());
+            map.put("namaSiswa", s.getNamaSiswa());
+            map.put("nisn", s.getNisn());
+            response.add(map);
+        }
+        return response;
+    }
 }

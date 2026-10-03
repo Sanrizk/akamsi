@@ -312,7 +312,7 @@
 
           if (!kelasId) return;
 
-          fetch('/guru/rapor/api/siswa-by-kelas?kelasId=' + kelasId)
+          fetch('/admin/rapor/api/siswa-by-kelas?kelasId=' + kelasId)
             .then(response => response.json())
             .then(data => {
               siswaSelect.innerHTML = '<option value="" disabled selected>-- Pilih Siswa --</option>';
