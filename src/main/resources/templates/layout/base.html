@@ -1,43 +1,355 @@
 <!DOCTYPE html>
-<html th:fragment="layout(title, content)" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html th:fragment="layout(title, content)" 
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="id"
+      data-bs-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="'AKAMSI - ' + ${title}">AKAMSI</title>
-    <link rel="icon" type="image/jpeg" th:href="@{/favicon.jpg}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; color: #334155; overflow-x: hidden; }
-        #wrapper { display: flex; min-height: 100vh; }
-        #sidebar-wrapper { width: 260px; background-color: #ffffff; border-right: 1px solid #E2E8F0; }
-        #page-content-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .btn { border-radius: 8px; font-weight: 500; }
-        .table > :not(caption) > * > * { padding: 1rem 1.5rem; border-bottom-color: #F1F5F9; vertical-align: middle; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="'AKAMSI - ' + ${title}">AKAMSI - School Management System</title>
+  <link rel="icon" type="image/jpeg" th:href="@{/favicon.jpg}">
+
+  <!-- Prevent Theme Flashing (FOUC) -->
+  <script>
+    (function () {
+      const storedTheme = localStorage.getItem('akamsi_theme') || 'light';
+      document.documentElement.setAttribute('data-bs-theme', storedTheme);
+    })();
+  </script>
+
+  <!-- Bootstrap 5.3 CSS & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --font-family-base: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --sidebar-width: 260px;
+    }
+
+    body {
+      font-family: var(--font-family-base);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bs-body-bg);
+      color: var(--bs-body-color);
+    }
+
+    /* Desktop Sidebar */
+    @media (min-width: 992px) {
+      .app-navbar {
+        height: 64px;
+        z-index: 1030;
+      }
+      .app-sidebar {
+        width: var(--sidebar-width);
+        position: fixed;
+        top: 64px;
+        bottom: 0;
+        left: 0;
+        z-index: 1020;
+        overflow-y: auto;
+        border-right: 1px solid var(--bs-border-color);
+        background-color: var(--bs-body-bg);
+      }
+      .app-main {
+        margin-left: var(--sidebar-width);
+      }
+    }
+
+    /* Navigation Link Accents */
+    .sidebar-nav .nav-link {
+      color: var(--bs-secondary-color);
+      font-weight: 500;
+      padding: 0.65rem 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s ease-in-out;
+    }
+    .sidebar-nav .nav-link:hover {
+      color: var(--bs-primary);
+      background-color: rgba(var(--bs-primary-rgb), 0.08);
+    }
+    .sidebar-nav .nav-link.active {
+      color: var(--bs-primary);
+      font-weight: 600;
+      background-color: rgba(var(--bs-primary-rgb), 0.12);
+    }
+    .sidebar-nav .nav-heading {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--bs-secondary-color);
+      padding: 0.75rem 1rem 0.25rem;
+    }
+
+    /* Print Clean Rules */
+    @media print {
+      .app-sidebar, .app-navbar, .theme-toggle, .breadcrumb-container, .no-print {
+        display: none !important;
+      }
+      .app-main {
+        margin-left: 0 !important;
+        padding: 0 !important;
+      }
+      body {
+        background-color: #fff !important;
+        color: #000 !important;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div id="wrapper">
-        <div th:replace="~{layout/sidebar :: sidebar}"></div>
-        <div id="page-content-wrapper">
-            <div th:replace="~{layout/header :: header}"></div>
-            <div class="container-fluid p-4">
-                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                <div th:replace="${content}"></div>
+
+  <!-- ================= TOP NAVBAR ================= -->
+  <nav class="navbar navbar-expand-lg border-bottom sticky-top bg-body app-navbar">
+    <div class="container-fluid px-3 px-lg-4">
+      <!-- Mobile Sidebar Toggle Button -->
+      <button class="btn btn-outline-secondary d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+        <i class="bi bi-list fs-5"></i>
+      </button>
+
+      <!-- Brand -->
+      <a class="navbar-brand fw-bold d-flex align-items-center text-primary" th:href="@{/}">
+        <img th:src="@{/favicon.jpg}" alt="Logo" width="30" height="30" class="me-2 rounded shadow-sm">
+        <span>AKAMSI</span>
+      </a>
+
+      <!-- Right Action Items -->
+      <div class="d-flex align-items-center ms-auto gap-2">
+        <!-- Night Mode / Dark Mode Toggle Button -->
+        <button id="themeToggleBtn" class="btn btn-outline-secondary btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;" title="Ubah Tema (Terang / Gelap)">
+          <i id="themeIcon" class="bi bi-moon-stars"></i>
+        </button>
+
+        <!-- User Profile Dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center gap-2 py-1 px-2 rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.8rem;">
+              <i class="bi bi-person-fill"></i>
             </div>
+            <span class="d-none d-md-inline fw-semibold small" sec:authentication="principal.user.namaLengkap">User</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+            <li class="px-3 py-2 border-bottom">
+              <div class="fw-bold small" sec:authentication="principal.user.namaLengkap">User</div>
+              <div class="text-muted" style="font-size: 0.75rem;" sec:authentication="principal.authorities">Role</div>
+            </li>
+            <li>
+              <a class="dropdown-item py-2" th:href="@{/profil}">
+                <i class="bi bi-person-circle me-2 text-primary"></i> Profil Saya
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form th:action="@{/logout}" method="post" class="m-0">
+                <button type="submit" class="dropdown-item py-2 text-danger">
+                  <i class="bi bi-box-arrow-right me-2"></i> Keluar
+                </button>
+              </form>
+            </li>
+          </ul>
         </div>
+      </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </nav>
+
+  <!-- ================= SIDEBAR (DESKTOP & MOBILE OFFCANVAS) ================= -->
+  <div class="offcanvas-lg offcanvas-start app-sidebar" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+    <div class="offcanvas-header border-bottom d-lg-none">
+      <h5 class="offcanvas-title fw-bold text-primary d-flex align-items-center" id="sidebarOffcanvasLabel">
+        <img th:src="@{/favicon.jpg}" alt="Logo" width="30" height="30" class="me-2 rounded shadow-sm">
+        AKAMSI
+      </h5>
+      <button type="button" class="btn-close d-lg-none" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Close"></button>
+    </div>
+
+    <div class="offcanvas-body p-3">
+      <ul class="navbar-nav sidebar-nav w-100">
+        <!-- Public / General -->
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/profil}">
+            <i class="bi bi-person-gear me-2 fs-5"></i> Profil Akun
+          </a>
+        </li>
+
+        <!-- ================= ADMIN NAVIGATION ================= -->
+        <div sec:authorize="hasRole('ADMIN')">
+          <div class="nav-heading">Administrator</div>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/dashboard}">
+              <i class="bi bi-speedometer2 me-2 fs-5"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/users}">
+              <i class="bi bi-people me-2 fs-5"></i> Kelola User
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/kelas}">
+              <i class="bi bi-door-open me-2 fs-5"></i> Kelas & Wali
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/siswa}">
+              <i class="bi bi-mortarboard me-2 fs-5"></i> Kelola Siswa
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/akademik/mapel}">
+              <i class="bi bi-book me-2 fs-5"></i> Mata Pelajaran
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/jadwal}">
+              <i class="bi bi-calendar3 me-2 fs-5"></i> Jadwal Pelajaran
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/spp}">
+              <i class="bi bi-wallet2 me-2 fs-5"></i> Transaksi SPP
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/laporan-spp}">
+              <i class="bi bi-file-earmark-bar-graph me-2 fs-5"></i> Laporan SPP Global
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/rapor}">
+              <i class="bi bi-award me-2 fs-5"></i> Rekap & Cetak Rapor
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/pengumuman}">
+              <i class="bi bi-megaphone-fill me-2 fs-5"></i> Pengumuman Sekolah
+            </a>
+          </li>
+        </div>
+
+        <!-- ================= GURU NAVIGATION ================= -->
+        <div sec:authorize="hasRole('GURU')">
+          <div class="nav-heading">Guru Pengajar</div>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/guru/dashboard}">
+              <i class="bi bi-speedometer2 me-2 fs-5"></i> Dashboard Guru
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/guru/presensi}">
+              <i class="bi bi-clipboard-check me-2 fs-5"></i> Presensi Harian
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/guru/rekap-presensi}">
+              <i class="bi bi-calendar2-range me-2 fs-5"></i> Rekap Kehadiran
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/guru/nilai}">
+              <i class="bi bi-pencil-square me-2 fs-5"></i> Input Nilai
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/guru/rapor}">
+              <i class="bi bi-journal-text me-2 fs-5"></i> Rapor Kelas
+            </a>
+          </li>
+        </div>
+
+        <!-- ================= SISWA / ORTU NAVIGATION ================= -->
+        <div sec:authorize="hasRole('SISWA')">
+          <div class="nav-heading">Siswa & Wali Murid</div>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/siswa/dashboard}">
+              <i class="bi bi-speedometer2 me-2 fs-5"></i> Dashboard Siswa
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/siswa/presensi}">
+              <i class="bi bi-calendar2-check me-2 fs-5"></i> Riwayat Presensi
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/siswa/rapor}">
+              <i class="bi bi-journal-check me-2 fs-5"></i> Rapor Akademik
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/siswa/spp}">
+              <i class="bi bi-receipt me-2 fs-5"></i> Tagihan SPP
+            </a>
+          </li>
+        </div>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= MAIN CONTENT WRAPPER ================= -->
+  <main class="app-main flex-grow-1 p-3 p-lg-4">
+    <!-- Breadcrumb Area -->
+    <div class="breadcrumb-container mb-3 no-print">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0 py-2 px-3 bg-body-tertiary rounded-3 small">
+          <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page" th:text="${title}">Portal</li>
+        </ol>
+      </nav>
+    </div>
+
+    <!-- Child View Content Fragment -->
+    <div th:replace="${content}">
+      <!-- Page specific templates inject here -->
+    </div>
+  </main>
+
+  <!-- Bootstrap 5.3 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Theme Switcher & Navigation Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const themeIcon = document.getElementById('themeIcon');
+
+      function updateThemeIcon(theme) {
+        if (theme === 'dark') {
+          themeIcon.className = 'bi bi-sun-fill text-warning';
+        } else {
+          themeIcon.className = 'bi bi-moon-stars text-secondary';
+        }
+      }
+
+      // Initialize icon state
+      const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+      updateThemeIcon(currentTheme);
+
+      // Toggle Theme Listener
+      themeToggleBtn.addEventListener('click', function () {
+        const activeTheme = document.documentElement.getAttribute('data-bs-theme');
+        const targetTheme = (activeTheme === 'dark') ? 'light' : 'dark';
+
+        document.documentElement.setAttribute('data-bs-theme', targetTheme);
+        localStorage.setItem('akamsi_theme', targetTheme);
+        updateThemeIcon(targetTheme);
+      });
+
+      // Highlight active link matching window.location.pathname
+      const currentPath = window.location.pathname;
+      document.querySelectorAll('.sidebar-nav .nav-link').forEach(function (link) {
+        if (link.getAttribute('href') === currentPath) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
+
