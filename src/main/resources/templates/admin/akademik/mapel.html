@@ -15,6 +15,16 @@
             </button>
         </div>
 
+        <!-- Alert Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <!-- Table -->
         <div class="card shadow-sm border-0">
             <div class="card-body p-0">
@@ -76,31 +86,30 @@
             </div>
         </div>
 
-    </div>
-
-    <!-- ========== ADD MODAL ========== -->
-    <div class="modal fade" id="addModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <form th:action="@{/admin/akademik/mapel/add}" method="post">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Tambah Mata Pelajaran</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Nama Mapel</label>
-                            <input type="text" name="namaMapel" class="form-control" placeholder="contoh: Matematika" required>
+        <!-- ========== ADD MODAL ========== -->
+        <div class="modal fade" id="addModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 shadow">
+                    <form th:action="@{/admin/akademik/mapel/add}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold">Tambah Mata Pelajaran</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Tambah</button>
-                    </div>
-                </form>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Nama Mapel</label>
+                                <input type="text" name="namaMapel" class="form-control" placeholder="contoh: Matematika" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Tambah</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
 
+    </div>
 </body>
 </html>

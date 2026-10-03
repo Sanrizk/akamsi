@@ -26,23 +26,32 @@ public class AdminAkademikController {
     }
 
     @PostMapping("/kurikulum/add")
-    public String addKurikulum(@ModelAttribute Kurikulum kurikulum, RedirectAttributes ra) {
+    public String addKurikulum(@RequestParam String namaKurikulum, @RequestParam(defaultValue = "false") boolean aktif, RedirectAttributes ra) {
         try {
+            Kurikulum kurikulum = new Kurikulum();
+            kurikulum.setNamaKurikulum(namaKurikulum.trim());
+            kurikulum.setAktif(aktif);
             akademikService.saveKurikulum(kurikulum);
             ra.addFlashAttribute("success", "Kurikulum berhasil ditambahkan.");
         } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
+            ra.addFlashAttribute("error", "Gagal menambahkan: " + e.getMessage());
         }
         return "redirect:/admin/akademik/kurikulum";
     }
 
     @PostMapping("/kurikulum/edit/{id}")
-    public String editKurikulum(@PathVariable Long id, @ModelAttribute Kurikulum kurikulum, RedirectAttributes ra) {
+    public String editKurikulum(@PathVariable Long id, 
+                                @RequestParam String namaKurikulum, 
+                                @RequestParam(defaultValue = "false") boolean aktif, 
+                                RedirectAttributes ra) {
         try {
+            Kurikulum kurikulum = new Kurikulum();
+            kurikulum.setNamaKurikulum(namaKurikulum.trim());
+            kurikulum.setAktif(aktif);
             akademikService.updateKurikulum(id, kurikulum);
             ra.addFlashAttribute("success", "Kurikulum berhasil diupdate.");
         } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
+            ra.addFlashAttribute("error", "Gagal mengupdate: " + e.getMessage());
         }
         return "redirect:/admin/akademik/kurikulum";
     }
@@ -52,8 +61,10 @@ public class AdminAkademikController {
         try {
             akademikService.deleteKurikulum(id);
             ra.addFlashAttribute("success", "Kurikulum berhasil dihapus.");
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            ra.addFlashAttribute("error", "Gagal menghapus: Kurikulum ini tidak dapat dihapus karena masih digunakan di data Kelas.");
         } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
+            ra.addFlashAttribute("error", "Gagal menghapus: " + e.getMessage());
         }
         return "redirect:/admin/akademik/kurikulum";
     }
@@ -66,12 +77,14 @@ public class AdminAkademikController {
     }
 
     @PostMapping("/mapel/add")
-    public String addMapel(@ModelAttribute MataPelajaran mapel, RedirectAttributes ra) {
+    public String addMapel(@RequestParam String namaMapel, RedirectAttributes ra) {
         try {
+            MataPelajaran mapel = new MataPelajaran();
+            mapel.setNamaMapel(namaMapel.trim());
             akademikService.saveMapel(mapel);
             ra.addFlashAttribute("success", "Mata Pelajaran berhasil ditambahkan.");
         } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
+            ra.addFlashAttribute("error", "Gagal menambahkan: " + e.getMessage());
         }
         return "redirect:/admin/akademik/mapel";
     }
@@ -94,8 +107,10 @@ public class AdminAkademikController {
         try {
             akademikService.deleteMapel(id);
             ra.addFlashAttribute("success", "Mata Pelajaran berhasil dihapus.");
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            ra.addFlashAttribute("error", "Gagal menghapus: Mata Pelajaran ini tidak dapat dihapus karena masih digunakan dalam data Jadwal, Presensi, atau Nilai Rapor.");
         } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
+            ra.addFlashAttribute("error", "Gagal menghapus: " + e.getMessage());
         }
         return "redirect:/admin/akademik/mapel";
     }
