@@ -104,8 +104,11 @@ public class DataSeeder implements CommandLineRunner {
             String lName = lastNames[rand.nextInt(lastNames.length)];
             String degree = (i % 3 == 0) ? ", M.Pd" : ", S.Pd";
             
+            // NIP changed to 12 characters as requested
+            String nip = "198" + rand.nextInt(10) + "1520" + String.format("%04d", i);
+            
             User userGuru = new User();
-            userGuru.setUsername("guru" + i);
+            userGuru.setUsername(nip); // Use NIP as username
             userGuru.setPassword(passwordEncoder.encode("password123"));
             userGuru.setNamaLengkap(fName + " " + lName + degree);
             userGuru.setRole(Role.GURU);
@@ -113,7 +116,7 @@ public class DataSeeder implements CommandLineRunner {
 
             Guru guru = new Guru();
             guru.setUser(userGuru);
-            guru.setNip("198" + rand.nextInt(10) + "0" + (1+rand.nextInt(9)) + "15200" + (rand.nextInt(9)+1) + "01200" + i);
+            guru.setNip(nip);
             guru.setNoHp("0812" + (10000000 + rand.nextInt(89999999)));
             savedGuru.add(guruRepository.save(guru));
         }
@@ -141,8 +144,10 @@ public class DataSeeder implements CommandLineRunner {
             String fName = firstNames[rand.nextInt(firstNames.length)];
             String lName = lastNames[rand.nextInt(lastNames.length)];
             
+            String nisn = "00123" + (10000 + i);
+            
             User userSiswa = new User();
-            userSiswa.setUsername("siswa" + i);
+            userSiswa.setUsername(nisn); // Use NISN as username
             userSiswa.setPassword(passwordEncoder.encode("password123"));
             userSiswa.setNamaLengkap(fName + " " + lName);
             userSiswa.setRole(Role.SISWA);
@@ -150,7 +155,7 @@ public class DataSeeder implements CommandLineRunner {
 
             Siswa siswa = new Siswa();
             siswa.setUser(userSiswa);
-            siswa.setNisn("00123" + (10000 + i));
+            siswa.setNisn(nisn);
             siswa.setNamaSiswa(userSiswa.getNamaLengkap());
             siswa.setJenisKelamin(rand.nextBoolean() ? "L" : "P");
             siswa.setNamaOrangTua((rand.nextBoolean() ? "Bpk. " : "Ibu ") + lastNames[rand.nextInt(lastNames.length)]);
