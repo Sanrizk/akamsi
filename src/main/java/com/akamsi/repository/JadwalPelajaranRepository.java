@@ -19,4 +19,6 @@ public interface JadwalPelajaranRepository extends JpaRepository<JadwalPelajaran
     List<MataPelajaran> findDistinctMapelByUserIdAndKelasId(@Param("userId") Long userId, @Param("kelasId") Long kelasId);
 
     List<JadwalPelajaran> findByGuruId(Long guruId);
+
+    List<JadwalPelajaran> findByKelasIdAndMapelId(Long kelasId, Long mapelId);
 }

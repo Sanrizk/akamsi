@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Rekapitulasi & Cetak Rapor Admin', ~{::content})}">
+<head>
+  <title>Rekapitulasi & Cetak Rapor Admin</title>
+</head>
+<body>
+  <div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+      <div>
+        <h4 class="mb-0 fw-bold">Monitoring & Cetak Rapor Siswa</h4>
+        <small class="text-muted">Akses monitoring progres input nilai guru dan legalisir/cetak rapor siswa</small>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs (Hidden during Print) -->
+    <ul class="nav nav-pills mb-4 no-print" id="raporTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" th:classappend="${activeTab == 'progres' ? 'active' : ''}"
+           th:href="@{/admin/rapor(tab='progres')}">
+          <i class="bi bi-bar-chart-steps me-1"></i> Monitoring Progres Nilai
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" th:classappend="${activeTab == 'cetak' ? 'active' : ''}"
+           th:href="@{/admin/rapor(tab='cetak')}">
+          <i class="bi bi-printer me-1"></i> Cetak Rapor Siswa
+        </a>
+      </li>
+    </ul>
+
+    <!-- ================= TAB 1: MONITORING PROGRES NILAI ================= -->
+    <div th:if="${activeTab == 'progres'}" class="no-print">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+          <form th:action="@{/admin/rapor}" method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="tab" value="progres" />
+
+            <div class="col-md-5">
+              <label for="pilihKelasProgres" class="form-label fw-bold small">Pilih Kelas</label>
+              <select id="pilihKelasProgres" name="kelasId" class="form-select" required>
+                <option th:each="k : ${kelasList}"
+                        th:value="${k.id}"
+                        th:text="${k.namaKelas}"
+                        th:selected="${targetKelasId != null and targetKelasId == k.id}">
+                  Kelas 1A
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-5">
+              <label for="pilihSemesterProgres" class="form-label fw-bold small">Pilih Semester</label>
+              <select id="pilihSemesterProgres" name="semester" class="form-select" required>
+                <option value="1" th:selected="${selectedSemester == 1}">Semester 1 (Ganjil)</option>
+                <option value="2" th:selected="${selectedSemester == 2}">Semester 2 (Genap)</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search me-1"></i> Tampilkan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Progres Table Card -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <div>
+            <span class="fw-bold fs-6"><i class="bi bi-card-checklist text-primary me-2"></i>Status Kelengkapan Nilai: </span>
+            <span class="badge bg-primary fs-6" th:text="${targetKelas != null ? targetKelas.namaKelas : '-'}">Kelas 1A</span>
+            <span class="badge bg-secondary fs-6" th:text="'Semester ' + ${selectedSemester}">Semester 1</span>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div th:if="${#lists.isEmpty(progresList)}" class="alert alert-info m-3 text-center">
+            <i class="bi bi-info-circle me-1"></i> Belum ada mata pelajaran yang terdaftar untuk kelas ini.
+          </div>
+
+          <div th:if="${!#lists.isEmpty(progresList)}" class="table-responsive">
+            <table class="table table-bordered table-hover align-middle mb-0">
+              <thead class="table-light text-center">
+                <tr>
+                  <th style="width: 5%;">No</th>
+                  <th style="width: 25%;">Mata Pelajaran</th>
+                  <th style="width: 25%;">Guru Pengampu</th>
+                  <th style="width: 15%;">Siswa Dinilai</th>
+                  <th>Progres Kelengkapan</th>
+                  <th style="width: 12%;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="p, stat : ${progresList}">
+                  <td class="text-center" th:text="${stat.count}">1</td>
+                  <td class="fw-bold" th:text="${p.namaMapel}">Matematika</td>
+                  <td th:text="${p.namaGuru}">Budi Santoso, S.Pd</td>
+                  <td class="text-center" th:text="${p.siswaDinilai} + ' / ' + ${p.totalSiswa} + ' Siswa'">28 / 30 Siswa</td>
+                  <td>
+                    <div class="progress" style="height: 18px;">
+                      <div class="progress-bar progress-bar-striped progress-bar-animated"
+                           role="progressbar"
+                           th:style="'width: ' + ${p.persentase} + '%;'"
+                           th:classappend="${p.persentase >= 100 ? 'bg-success' : (p.persentase > 0 ? 'bg-warning' : 'bg-secondary')}"
+                           th:text="${p.persentase} + '%'">
+                        50%
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <span th:if="${p.status == 'LENGKAP'}" class="badge bg-success">LENGKAP</span>
+                    <span th:if="${p.status == 'PROSES'}" class="badge bg-warning text-dark">PROSES</span>
+                    <span th:if="${p.status == 'BELUM'}" class="badge bg-danger">BELUM DIISI</span>
+                    <span th:if="${p.status == 'KOSONG'}" class="badge bg-secondary">0 SISWA</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 2: CETAK RAPOR SISWA ================= -->
+    <div th:if="${activeTab == 'cetak'}">
+      <!-- Filter Card (Hidden during print) -->
+      <div class="card shadow-sm border-0 mb-4 no-print">
+        <div class="card-body">
+          <form th:action="@{/admin/rapor}" method="get" class="row g-3 align-items-end">
+            <input type="hidden" name="tab" value="cetak" />
+
+            <div class="col-md-4">
+              <label for="selectKelasCetak" class="form-label fw-bold small">Pilih Kelas</label>
+              <select id="selectKelasCetak" name="kelasId" class="form-select" required>
+                <option value="" disabled th:selected="${selectedKelasId == null}">-- Pilih Kelas --</option>
+                <option th:each="k : ${kelasList}"
+                        th:value="${k.id}"
+                        th:text="${k.namaKelas}"
+                        th:selected="${selectedKelasId != null and selectedKelasId == k.id}">
+                  Kelas 1A
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-4">
+              <label for="selectSiswaCetak" class="form-label fw-bold small">Pilih Siswa</label>
+              <select id="selectSiswaCetak" name="siswaId" class="form-select" required>
+                <option value="" disabled th:selected="${selectedSiswa == null}">-- Pilih Siswa --</option>
+                <option th:each="s : ${siswaList}"
+                        th:value="${s.id}"
+                        th:text="'[' + ${s.nisn} + '] ' + ${s.namaSiswa}"
+                        th:selected="${selectedSiswa != null and selectedSiswa.id == s.id}">
+                  [001] Budi
+                </option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <label for="selectSemesterCetak" class="form-label fw-bold small">Pilih Semester</label>
+              <select id="selectSemesterCetak" name="semester" class="form-select" required>
+                <option value="1" th:selected="${selectedSemester == 1}">Semester 1</option>
+                <option value="2" th:selected="${selectedSemester == 2}">Semester 2</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search me-1"></i> Tampilkan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div th:if="${selectedSiswa == null}" class="alert alert-info text-center py-4 no-print">
+        <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+        Silakan pilih <strong>Kelas</strong> dan <strong>Siswa</strong> untuk melihat buku rapor dan mencetak transkrip nilai.
+      </div>
+
+      <!-- Printable Report Card Section -->
+      <div th:if="${selectedSiswa != null}">
+        <!-- Action Header Bar (Hidden during print) -->
+        <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+          <div>
+            <span class="badge bg-info text-dark me-2">MODE READ-ONLY</span>
+            <small class="text-muted">Nilai telah dikunci dan bersumber dari pengolahan rapor akhir guru.</small>
+          </div>
+          <div>
+            <button onclick="window.print()" class="btn btn-success">
+              <i class="bi bi-printer me-1"></i> Cetak Lembar Rapor
+            </button>
+          </div>
+        </div>
+
+        <!-- Official Header (Visible Only in Print) -->
+        <div class="d-none d-print-block text-center mb-4 pb-2 border-bottom border-2 border-dark">
+          <h3 class="fw-bold mb-1">AKAMSI SCHOOL MANAGEMENT SYSTEM</h3>
+          <h5 class="mb-1">LAPORAN HASIL BELAJAR PESERTA DIDIK (RAPOR)</h5>
+          <p class="small text-muted mb-0">Tahun Ajaran Aktif | Dokumen Cetak Resmi</p>
+        </div>
+
+        <!-- Student Biodata Card -->
+        <div class="card shadow-sm border-0 mb-4 print-card">
+          <div class="card-header bg-light py-2 border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-uppercase"><i class="bi bi-person-badge me-2"></i>Identitas Peserta Didik</span>
+            <div>
+              <span class="badge bg-primary" th:text="${namaKelas}">Kelas 1A</span>
+              <span class="badge bg-secondary" th:text="'Semester ' + ${selectedSemester}">Semester 1</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-2">
+              <div class="col-6">
+                <div class="row">
+                  <div class="col-4 text-muted small">Nama Siswa</div>
+                  <div class="col-8 fw-bold" th:text="${selectedSiswa.namaSiswa}">Ahmad Dahlan</div>
+                </div>
+                <div class="row">
+                  <div class="col-4 text-muted small">NISN</div>
+                  <div class="col-8 fw-semibold" th:text="${selectedSiswa.nisn}">0012345678</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="row">
+                  <div class="col-4 text-muted small">Orang Tua / Wali</div>
+                  <div class="col-8" th:text="${selectedSiswa.namaOrangTua}">Siti Aminah</div>
+                </div>
+                <div class="row">
+                  <div class="col-4 text-muted small">Tingkat Kelas</div>
+                  <div class="col-8 fw-semibold" th:text="${namaKelas}">Kelas 1A</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Table -->
+        <div class="card shadow-sm border-0 mb-4 print-card">
+          <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(raporList)}" class="alert alert-warning m-3 text-center">
+              <i class="bi bi-exclamation-triangle me-1"></i> Rapor belum dikalkulasi atau belum ada nilai yang diinput oleh dewan guru untuk siswa ini pada semester yang dipilih.
+            </div>
+
+            <div th:if="${!#lists.isEmpty(raporList)}" class="table-responsive">
+              <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light text-center">
+                  <tr>
+                    <th style="width: 5%;">No</th>
+                    <th style="width: 25%;">Mata Pelajaran</th>
+                    <th style="width: 12%;">Nilai Akhir</th>
+                    <th style="width: 10%;">Predikat</th>
+                    <th>Capaian Kompetensi / Pembelajaran</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="r, stat : ${raporList}">
+                    <td class="text-center" th:text="${stat.count}">1</td>
+                    <td class="fw-bold" th:text="${r.mapel.namaMapel}">Matematika</td>
+                    <td class="text-center fw-bold fs-6" th:text="${r.nilaiAkhir != null ? #numbers.formatDecimal(r.nilaiAkhir, 1, 'POINT', 1, 'COMMA') : '-'}">85.0</td>
+                    <td class="text-center">
+                      <span th:if="${r.predikat == 'A'}" class="badge bg-success">A</span>
+                      <span th:if="${r.predikat == 'B'}" class="badge bg-primary">B</span>
+                      <span th:if="${r.predikat == 'C'}" class="badge bg-warning text-dark">C</span>
+                      <span th:if="${r.predikat == 'D'}" class="badge bg-danger">D</span>
+                    </td>
+                    <td class="small" th:text="${r.deskripsiCapaian}">Menunjukkan penguasaan materi yang sangat baik.</td>
+                  </tr>
+                </tbody>
+                <tfoot class="table-light">
+                  <tr class="fw-bold">
+                    <td colspan="2" class="text-end">RATA-RATA NILAI AKHIR:</td>
+                    <td class="text-center text-primary fs-5" th:text="${#numbers.formatDecimal(rataRata, 1, 'POINT', 1, 'COMMA')}">85.0</td>
+                    <td colspan="2" class="text-muted small">Rata-rata akumulatif hasil belajar seluruh mata pelajaran semester ini.</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Official Signatures (Visible only in Print) -->
+        <div class="row mt-5 pt-4 d-none d-print-flex">
+          <div class="col-4 text-center">
+            <p class="mb-5">Mengetahui,<br>Orang Tua / Wali Siswa</p>
+            <p class="fw-bold text-decoration-underline mb-0">( ............................................ )</p>
+          </div>
+          <div class="col-4 text-center">
+            <p class="mb-5">Wali Kelas,</p>
+            <p class="fw-bold text-decoration-underline mb-0">( ............................................ )</p>
+            <small class="text-muted">NIP. .....................................</small>
+          </div>
+          <div class="col-4 text-center">
+            <p class="mb-5">Kepala Sekolah,</p>
+            <p class="fw-bold text-decoration-underline mb-0">( ............................................ )</p>
+            <small class="text-muted">NIP. .....................................</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script for Dynamic Cascading Dropdown in Tab 2 -->
+    <script>
+      const selectKelas = document.getElementById('selectKelasCetak');
+      if (selectKelas) {
+        selectKelas.addEventListener('change', function () {
+          const kelasId = this.value;
+          const siswaSelect = document.getElementById('selectSiswaCetak');
+
+          siswaSelect.innerHTML = '<option value="" disabled selected>Memuat data siswa...</option>';
+          siswaSelect.disabled = true;
+
+          if (!kelasId) return;
+
+          fetch('/guru/rapor/api/siswa-by-kelas?kelasId=' + kelasId)
+            .then(response => response.json())
+            .then(data => {
+              siswaSelect.innerHTML = '<option value="" disabled selected>-- Pilih Siswa --</option>';
+              data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = '[' + item.nisn + '] ' + item.namaSiswa;
+                siswaSelect.appendChild(opt);
+              });
+              siswaSelect.disabled = false;
+            })
+            .catch(err => {
+              console.error('Gagal mengambil data siswa:', err);
+              siswaSelect.innerHTML = '<option value="" disabled selected>Gagal memuat data</option>';
+            });
+        });
+      }
+    </script>
+
+    <!-- Dedicated Print Media CSS -->
+    <style>
+      @media print {
+        .navbar, .sidebar, .btn, .breadcrumb, .no-print, form, nav {
+          display: none !important;
+        }
+        .print-card {
+          border: 1px solid #dee2e6 !important;
+          box-shadow: none !important;
+          margin-bottom: 20px !important;
+        }
+        .badge {
+          border: 1px solid #000;
+          color: #000 !important;
+          background: transparent !important;
+        }
+        body {
+          background-color: #fff !important;
+          font-size: 11pt;
+        }
+      }
+    </style>
+  </div>
+</body>
+</html>
