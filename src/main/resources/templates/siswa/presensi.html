@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Riwayat Presensi Siswa', ~{::content})}">
+<head>
+  <title>Riwayat Presensi Siswa</title>
+</head>
+<body>
+  <div th:fragment="content">
+    <!-- Header (Hidden during Print) -->
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+      <div>
+        <h4 class="mb-0 fw-bold">Riwayat Kehadiran Siswa</h4>
+        <small class="text-muted">Log presensi mata pelajaran harian dan akumulasi kehadiran peserta didik</small>
+      </div>
+      <div>
+        <button onclick="window.print()" class="btn btn-outline-dark">
+          <i class="bi bi-printer me-1"></i> Cetak Rekap Kehadiran
+        </button>
+      </div>
+    </div>
+
+    <!-- Official Report Header for Print Only -->
+    <div class="d-none d-print-block text-center mb-4 pb-2 border-bottom border-dark">
+      <h3 class="fw-bold mb-1">AKAMSI SCHOOL MANAGEMENT SYSTEM</h3>
+      <h5 class="mb-1">LEMBAR HISTORI & REKAPITULASI KEHADIRAN SISWA</h5>
+      <p class="small text-muted mb-0">
+        Nama: <strong><span th:text="${siswa.namaSiswa}"></span></strong> | 
+        NISN: <strong><span th:text="${siswa.nisn}"></span></strong> | 
+        Kelas: <strong><span th:text="${siswa.kelas != null ? siswa.kelas.namaKelas : '-'}"></span></strong>
+      </p>
+    </div>
+
+    <!-- Filter Card (Hidden during Print) -->
+    <div class="card shadow-sm border-0 mb-4 no-print">
+      <div class="card-body">
+        <form th:action="@{/siswa/presensi}" th:object="${filter}" method="get" class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label for="filterMapel" class="form-label fw-bold small">Mata Pelajaran</label>
+            <select id="filterMapel" th:field="*{mapelId}" class="form-select">
+              <option value="">-- Semua Mata Pelajaran --</option>
+              <option th:each="m : ${mapelList}" th:value="${m.id}" th:text="${m.namaMapel}">Matematika</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="filterStart" class="form-label fw-bold small">Dari Tanggal</label>
+            <input type="date" id="filterStart" th:field="*{startDate}" class="form-control" required />
+          </div>
+
+          <div class="col-md-3">
+            <label for="filterEnd" class="form-label fw-bold small">Sampai Tanggal</label>
+            <input type="date" id="filterEnd" th:field="*{endDate}" class="form-control" required />
+          </div>
+
+          <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-funnel me-1"></i> Filter
+            </button>
+            <a th:href="@{/siswa/presensi}" class="btn btn-outline-secondary" title="Reset Filter">
+              <i class="bi bi-arrow-counterclockwise"></i>
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-primary border-4 h-100 print-card">
+          <div class="card-body">
+            <div class="text-muted small fw-bold text-uppercase">Total Sesi Pertemuan</div>
+            <h4 class="fw-bold text-primary mb-0" th:text="${summary.totalPertemuan} + ' Sesi'">20 Sesi</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-success border-4 h-100 print-card">
+          <div class="card-body">
+            <div class="text-muted small fw-bold text-uppercase">Tingkat Kehadiran</div>
+            <h4 class="fw-bold text-success mb-0" th:text="${#numbers.formatDecimal(summary.persentaseKehadiran, 1, 1)} + '%'">95.0%</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-info border-4 h-100 print-card">
+          <div class="card-body">
+            <div class="text-muted small fw-bold text-uppercase">Hadir / Sakit</div>
+            <h4 class="fw-bold mb-0">
+              <span class="text-success" th:text="${summary.hadir}">18</span> H / 
+              <span class="text-info" th:text="${summary.sakit}">1</span> S
+            </h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-danger border-4 h-100 print-card">
+          <div class="card-body">
+            <div class="text-muted small fw-bold text-uppercase">Izin / Alpa</div>
+            <h4 class="fw-bold mb-0">
+              <span class="text-warning text-dark" th:text="${summary.izin}">1</span> I / 
+              <span class="text-danger" th:text="${summary.alpa}">0</span> A
+            </h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Log Table Card -->
+    <div class="card shadow-sm border-0 mb-4 print-card">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Catatan Presensi Harian</span>
+        <span class="badge bg-secondary" th:text="${#lists.size(presensiList)} + ' Catatan'">0 Catatan</span>
+      </div>
+      <div class="card-body p-0">
+        <div th:if="${#lists.isEmpty(presensiList)}" class="alert alert-info m-3 text-center">
+          <i class="bi bi-info-circle me-1"></i> Tidak ada catatan riwayat presensi yang ditemukan untuk rentang tanggal yang dipilih.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(presensiList)}" class="table-responsive">
+          <table class="table table-bordered table-hover align-middle mb-0">
+            <thead class="table-light text-center">
+              <tr>
+                <th style="width: 5%;">No</th>
+                <th style="width: 15%;">Tanggal & Hari</th>
+                <th style="width: 25%;">Mata Pelajaran</th>
+                <th style="width: 15%;">Jam Pelajaran</th>
+                <th style="width: 15%;">Status Kehadiran</th>
+                <th>Keterangan / Catatan Guru</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="p, stat : ${presensiList}">
+                <td class="text-center" th:text="${stat.count}">1</td>
+                <td class="text-center fw-semibold">
+                  <span th:text="${#temporals.format(p.tanggal, 'dd-MM-yyyy')}">02-10-2026</span>
+                </td>
+                <td class="fw-bold" th:text="${p.mapel.namaMapel}">Matematika</td>
+                <td class="text-center small text-muted">
+                  <span>-</span>
+                </td>
+                <td class="text-center">
+                  <span th:if="${p.status.name() == 'HADIR'}" class="badge bg-success px-2 py-1">HADIR</span>
+                  <span th:if="${p.status.name() == 'SAKIT'}" class="badge bg-info text-dark px-2 py-1">SAKIT</span>
+                  <span th:if="${p.status.name() == 'IZIN'}" class="badge bg-warning text-dark px-2 py-1">IZIN</span>
+                  <span th:if="${p.status.name() == 'ALPA'}" class="badge bg-danger px-2 py-1">ALPA</span>
+                </td>
+                <td class="small" th:text="${p.keterangan != null and !p.keterangan.isEmpty() ? p.keterangan : '-'}">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Official Signatures for Print Mode -->
+    <div class="row mt-5 pt-4 d-none d-print-flex">
+      <div class="col-6 text-center">
+        <p class="mb-5">Mengetahui,<br>Orang Tua / Wali Siswa</p>
+        <p class="fw-bold text-decoration-underline mb-0" th:text="'( ' + (${siswa.namaOrangTua != null ? siswa.namaOrangTua : '............................................'}) + ' )'">( Siti Aminah )</p>
+      </div>
+      <div class="col-6 text-center">
+        <p class="mb-5">Wali Kelas,</p>
+        <p class="fw-bold text-decoration-underline mb-0">( ............................................ )</p>
+        <small class="text-muted">NIP. .....................................</small>
+      </div>
+    </div>
+
+    <!-- Dedicated Print Media CSS -->
+    <style>
+      @media print {
+        .navbar, .sidebar, .btn, .breadcrumb, .no-print, form {
+          display: none !important;
+        }
+        .print-card {
+          border: 1px solid #dee2e6 !important;
+          box-shadow: none !important;
+          margin-bottom: 20px !important;
+        }
+        .badge {
+          border: 1px solid #000;
+          color: #000 !important;
+          background: transparent !important;
+        }
+        body {
+          background-color: #fff !important;
+          font-size: 11pt;
+        }
+      }
+    </style>
+  </div>
+</body>
+</html>

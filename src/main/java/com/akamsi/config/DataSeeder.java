@@ -24,6 +24,7 @@ public class DataSeeder implements CommandLineRunner {
     private final RaporAkhirRepository raporAkhirRepository;
     private final PembayaranSPPRepository sppRepository;
     private final JadwalPelajaranRepository jadwalPelajaranRepository;
+    private final PresensiRepository presensiRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(UserRepository userRepository, GuruRepository guruRepository, 
@@ -31,7 +32,7 @@ public class DataSeeder implements CommandLineRunner {
                       MataPelajaranRepository mapelRepository, KurikulumRepository kurikulumRepository,
                       KomponenNilaiRepository komponenNilaiRepository, NilaiSiswaRepository nilaiSiswaRepository,
                       RaporAkhirRepository raporAkhirRepository, PembayaranSPPRepository sppRepository, 
-                      JadwalPelajaranRepository jadwalPelajaranRepository, PasswordEncoder passwordEncoder) {
+                      JadwalPelajaranRepository jadwalPelajaranRepository, PresensiRepository presensiRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.guruRepository = guruRepository;
         this.kelasRepository = kelasRepository;
@@ -43,6 +44,7 @@ public class DataSeeder implements CommandLineRunner {
         this.raporAkhirRepository = raporAkhirRepository;
         this.sppRepository = sppRepository;
         this.jadwalPelajaranRepository = jadwalPelajaranRepository;
+        this.presensiRepository = presensiRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -197,6 +199,32 @@ public class DataSeeder implements CommandLineRunner {
                 rapor.setNilaiAkhir(nilaiAkhir);
                 rapor.setDeskripsiCapaian("Siswa " + s.getNamaSiswa() + " menunjukkan pemahaman sangat baik pada penjumlahan dan pengurangan serta membaca bilangan cacah.");
                 raporAkhirRepository.save(rapor);
+            }
+
+            // Seed 10 presensi records for the first student in 1A
+            if (!siswaKelas1A.isEmpty()) {
+                Siswa firstSiswa = siswaKelas1A.get(0);
+                java.time.LocalDate baseDate = java.time.LocalDate.now().minusDays(10);
+                
+                for (int p = 0; p < 10; p++) {
+                    Presensi presensi = new Presensi();
+                    presensi.setSiswa(firstSiswa);
+                    presensi.setMapel(p % 2 == 0 ? mtk : bIndo);
+                    presensi.setTanggal(baseDate.plusDays(p));
+                    
+                    if (p < 7) {
+                        presensi.setStatus(StatusPresensi.HADIR);
+                    } else if (p == 7) {
+                        presensi.setStatus(StatusPresensi.SAKIT);
+                    } else if (p == 8) {
+                        presensi.setStatus(StatusPresensi.IZIN);
+                    } else {
+                        presensi.setStatus(StatusPresensi.ALPA);
+                    }
+                    
+                    presensi.setKeterangan(presensi.getStatus() != StatusPresensi.HADIR ? "Catatan otomatis absen" : "");
+                    presensiRepository.save(presensi);
+                }
             }
         }
     }

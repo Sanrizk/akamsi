@@ -26,29 +26,6 @@ public class SiswaPanelController {
         return panelService.getSiswaProfile(userDetails.getUser());
     }
 
-    @GetMapping("/dashboard")
-    public String dashboard(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        try {
-            Siswa siswa = getSiswaOrThrow(userDetails);
-            model.addAttribute("siswa", siswa);
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "siswa/dashboard";
-    }
-
-    @GetMapping("/presensi")
-    public String viewAttendanceHistory(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
-        try {
-            Siswa siswa = getSiswaOrThrow(userDetails);
-            model.addAttribute("siswa", siswa);
-            model.addAttribute("presensiList", panelService.getAttendanceHistory(siswa));
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "siswa/presensi-history";
-    }
-
     @GetMapping("/spp")
     public String viewSppHistory(Model model, @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {

@@ -15,7 +15,7 @@ public interface PresensiRepository extends JpaRepository<Presensi, Long> {
     List<Presensi> findBySiswaKelasIdAndMapelIdAndTanggal(Long kelasId, Long mapelId, LocalDate tanggal);
     List<Presensi> findBySiswaIdOrderByTanggalDesc(Long siswaId);
 
-    @Query("SELECT p FROM Presensi p WHERE p.siswa.id = :siswaId AND p.tanggal BETWEEN :startDate AND :endDate")
+    @Query("SELECT p FROM Presensi p WHERE p.siswa.id = :siswaId AND p.tanggal BETWEEN :startDate AND :endDate ORDER BY p.tanggal DESC")
     List<Presensi> findBySiswaIdAndTanggalBetween(
             @org.springframework.data.repository.query.Param("siswaId") Long siswaId,
             @org.springframework.data.repository.query.Param("startDate") LocalDate startDate,
@@ -28,4 +28,13 @@ public interface PresensiRepository extends JpaRepository<Presensi, Long> {
             @org.springframework.data.repository.query.Param("startDate") LocalDate startDate,
             @org.springframework.data.repository.query.Param("endDate") LocalDate endDate
     );
+
+    @Query("SELECT p FROM Presensi p WHERE p.siswa.id = :siswaId AND p.mapel.id = :mapelId AND p.tanggal BETWEEN :startDate AND :endDate ORDER BY p.tanggal DESC")
+    List<Presensi> findBySiswaIdAndMapelIdAndTanggalBetween(
+            @org.springframework.data.repository.query.Param("siswaId") Long siswaId,
+            @org.springframework.data.repository.query.Param("mapelId") Long mapelId,
+            @org.springframework.data.repository.query.Param("startDate") LocalDate startDate,
+            @org.springframework.data.repository.query.Param("endDate") LocalDate endDate
+    );
+
 }
