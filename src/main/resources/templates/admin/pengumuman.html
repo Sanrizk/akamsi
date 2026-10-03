@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Manajemen Pengumuman', ~{::content})}">
+<head>
+    <title>Manajemen Pengumuman</title>
+</head>
+<body>
+    <div th:fragment="content">
+        <!-- Page Title & Add Button -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Mading Sekolah</h3>
+                <p class="text-muted mb-0">Kelola pengumuman & informasi sekolah untuk Guru dan Siswa.</p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAddPengumuman">
+                    <i class="bi bi-megaphone-fill me-2"></i>Buat Pengumuman
+                </button>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Pengumuman List Cards -->
+        <div class="row g-4">
+            <div th:if="${#lists.isEmpty(pengumumanList)}" class="col-12">
+                <div class="alert alert-info text-center shadow-sm">
+                    <i class="bi bi-info-circle me-2"></i>Belum ada pengumuman yang diterbitkan.
+                </div>
+            </div>
+
+            <div th:each="p : ${pengumumanList}" class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm position-relative">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span th:if="${p.targetRole == 'SEMUA'}" class="badge bg-success mb-2">Umum</span>
+                            <span th:if="${p.targetRole == 'GURU'}" class="badge bg-info text-dark mb-2">Khusus Guru</span>
+                            <span th:if="${p.targetRole == 'SISWA'}" class="badge bg-primary mb-2">Khusus Siswa</span>
+                            
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                    <li>
+                                        <button class="dropdown-item text-warning fw-semibold" data-bs-toggle="modal" th:data-bs-target="'#modalEditPengumuman' + ${p.id}">
+                                            <i class="bi bi-pencil-square me-2"></i>Edit
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <form th:action="@{/admin/pengumuman/delete/{id}(id=${p.id})}" method="post" onsubmit="return confirm('Yakin ingin menghapus pengumuman ini secara permanen?');">
+                                            <button type="submit" class="dropdown-item text-danger fw-semibold">
+                                                <i class="bi bi-trash me-2"></i>Hapus
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h5 class="card-title fw-bold" th:text="${p.judul}">Judul Pengumuman</h5>
+                        <p class="card-text text-muted small mb-3" style="white-space: pre-line;" th:text="${p.isi}">Isi pengumuman...</p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pt-0 pb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted"><i class="bi bi-person me-1"></i><span th:text="${p.penulis}">Admin</span></small>
+                            <small class="text-muted"><i class="bi bi-clock me-1"></i><span th:text="${#temporals.format(p.createdAt, 'dd MMM yyyy, HH:mm')}">Date</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Edit Pengumuman (Terkait per item) -->
+                <div class="modal fade" th:id="'modalEditPengumuman' + ${p.id}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                            <form th:action="@{/admin/pengumuman/edit/{id}(id=${p.id})}" method="post">
+                                <div class="modal-header bg-light">
+                                    <h5 class="modal-title fw-bold text-primary"><i class="bi bi-pencil-square me-2"></i>Edit Pengumuman</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">Judul Pengumuman</label>
+                                        <input type="text" name="judul" class="form-control" th:value="${p.judul}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">Isi Pengumuman</label>
+                                        <textarea name="isi" class="form-control" rows="5" required th:text="${p.isi}"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">Target Pembaca</label>
+                                        <select name="targetRole" class="form-select" required>
+                                            <option value="SEMUA" th:selected="${p.targetRole == 'SEMUA'}">Semua (Guru & Siswa)</option>
+                                            <option value="GURU" th:selected="${p.targetRole == 'GURU'}">Khusus Guru</option>
+                                            <option value="SISWA" th:selected="${p.targetRole == 'SISWA'}">Khusus Siswa</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light border-top-0">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Add Pengumuman (Global) -->
+        <div class="modal fade" id="modalAddPengumuman" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <form th:action="@{/admin/pengumuman/add}" method="post">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title fw-bold text-primary"><i class="bi bi-megaphone-fill me-2"></i>Buat Pengumuman Baru</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Judul Pengumuman</label>
+                                <input type="text" name="judul" class="form-control" placeholder="Contoh: Libur Nasional..." required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Isi Pengumuman</label>
+                                <textarea name="isi" class="form-control" rows="5" placeholder="Tuliskan detail pengumuman di sini..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Target Pembaca</label>
+                                <select name="targetRole" class="form-select" required>
+                                    <option value="SEMUA" selected>Semua (Guru & Siswa)</option>
+                                    <option value="GURU">Khusus Guru</option>
+                                    <option value="SISWA">Khusus Siswa</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light border-top-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Terbitkan Pengumuman</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
+
