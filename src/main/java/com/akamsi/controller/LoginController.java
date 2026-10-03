@@ -24,7 +24,7 @@ public class LoginController {
             if (role.equals("ROLE_ADMIN")) {
                 return "redirect:/admin/users";
             } else if (role.equals("ROLE_GURU")) {
-                return "redirect:/guru/presensi";
+                return "redirect:/guru/dashboard";
             } else if (role.equals("ROLE_SISWA")) {
                 return "redirect:/siswa/dashboard";
             }

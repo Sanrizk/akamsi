@@ -1,49 +1,212 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Dashboard Guru', ~{::content})}">
 <head>
-    <meta charset="UTF-8">
-    <title>AKAMSI - Guru Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Dashboard Guru</title>
 </head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AKAMSI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/guru/presensi">Presensi</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/guru/nilai">Nilai</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-light btn-sm mt-1" type="submit">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
+<body>
+  <div th:fragment="content">
+    <!-- Welcome Header Banner -->
+    <div class="card shadow-sm border-0 mb-4 bg-primary text-white">
+      <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <span class="badge bg-light text-primary mb-2 fw-semibold">PANEL GURU AKAMSI</span>
+          <h3 class="fw-bold mb-1">
+            Selamat Datang, <span th:text="${guru != null and guru.user != null ? guru.user.namaLengkap : user.namaLengkap}">Budi Santoso, S.Pd</span>
+          </h3>
+          <p class="mb-0 text-white-50">
+            <i class="bi bi-calendar3 me-1"></i> <span th:text="${tanggalLengkap}">Senin, 02 Oktober 2026</span>
+            <span th:if="${guru != null and guru.nip != null}" class="ms-3">
+              <i class="bi bi-person-badge me-1"></i> NIP: <span th:text="${guru.nip}">198203...</span>
+            </span>
+          </p>
         </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">Guru Dashboard</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Welcome to the Guru Dashboard module for AKAMSI.</p>
-                
-                <!-- TODO: Insert specific tables, forms, and data iterations here -->
-                
-            </div>
+        <div>
+          <a th:href="@{/guru/presensi}" class="btn btn-light text-primary fw-semibold me-2 shadow-sm">
+            <i class="bi bi-clipboard-check me-1"></i> Presensi Harian
+          </a>
+          <a th:href="@{/guru/nilai}" class="btn btn-outline-light fw-semibold shadow-sm">
+            <i class="bi bi-pencil-square me-1"></i> Input Nilai
+          </a>
         </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Summary KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-primary border-4 h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small fw-bold text-uppercase">Jadwal Hari Ini (<span th:text="${hariIni}">Senin</span>)</div>
+              <h3 class="fw-bold text-primary mb-0" th:text="${totalSesiHariIni} + ' Sesi'">2 Sesi</h3>
+            </div>
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3">
+              <i class="bi bi-clock-history fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small fw-bold text-uppercase">Kelas yang Diampu</div>
+              <h3 class="fw-bold text-success mb-0" th:text="${totalKelasDiampu} + ' Kelas'">3 Kelas</h3>
+            </div>
+            <div class="rounded-circle bg-success bg-opacity-10 text-success p-3">
+              <i class="bi bi-people-fill fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 border-start border-info border-4 h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small fw-bold text-uppercase">Total Jam Mingguan</div>
+              <h3 class="fw-bold text-info text-dark mb-0" th:text="${totalJadwalMingguan} + ' Pertemuan'">12 Pertemuan</h3>
+            </div>
+            <div class="rounded-circle bg-info bg-opacity-10 text-info p-3">
+              <i class="bi bi-calendar-week fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <!-- Left Column: Today's Schedule -->
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold">
+              <i class="bi bi-calendar-event me-2 text-primary"></i>Jadwal Mengajar Hari Ini (<span th:text="${hariIni}">Senin</span>)
+            </span>
+            <span class="badge bg-primary" th:text="${totalSesiHariIni} + ' Jadwal Aktif'">2 Jadwal</span>
+          </div>
+          <div class="card-body p-0">
+            <!-- Empty Schedule State -->
+            <div th:if="${#lists.isEmpty(jadwalHariIni)}" class="text-center py-5 text-muted">
+              <i class="bi bi-cup-hot fs-1 d-block mb-2 text-warning"></i>
+              <h6 class="fw-bold">Tidak Ada Jadwal Mengajar Hari Ini</h6>
+              <p class="small mb-0">Selamat beristirahat atau memanfaatkan waktu untuk evaluasi penilaian siswa.</p>
+            </div>
+
+            <!-- Schedule List Table -->
+            <div th:if="${!#lists.isEmpty(jadwalHariIni)}" class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 20%;">Waktu</th>
+                    <th style="width: 20%;">Kelas</th>
+                    <th>Mata Pelajaran</th>
+                    <th style="width: 20%;" class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="j : ${jadwalHariIni}">
+                    <td class="fw-semibold text-primary">
+                      <i class="bi bi-clock me-1"></i>
+                      <span th:text="${#temporals.format(j.jamMulai, 'HH:mm')}">07:30</span> - 
+                      <span th:text="${#temporals.format(j.jamSelesai, 'HH:mm')}">09:00</span>
+                    </td>
+                    <td>
+                      <span class="badge bg-primary fs-6" th:text="${j.kelas.namaKelas}">Kelas 1A</span>
+                    </td>
+                    <td>
+                      <div class="fw-bold" th:text="${j.mapel.namaMapel}">Matematika</div>
+                      <small class="text-muted" th:text="'Ruang: ' + ${j.kelas.namaKelas}">Ruang: Kelas 1A</small>
+                    </td>
+                    <td class="text-center">
+                      <a th:href="@{/guru/presensi(jadwalId=${j.id})}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-check2-square me-1"></i> Presensi
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Announcements -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold">
+              <i class="bi bi-megaphone me-2 text-danger"></i>Pengumuman Sekolah
+            </span>
+          </div>
+          <div class="card-body p-3">
+            <div th:if="${#lists.isEmpty(pengumumanList)}" class="text-center py-4 text-muted">
+              <i class="bi bi-bell-slash fs-2 d-block mb-1"></i>
+              <span class="small">Belum ada pengumuman terbaru.</span>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(pengumumanList)}" class="d-flex flex-column gap-3">
+              <div th:each="p : ${pengumumanList}" class="p-3 rounded border-start border-3 border-primary bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <h6 class="fw-bold mb-0 text-dark" th:text="${p.judul}">Rapat Evaluasi Semester</h6>
+                  <span class="badge bg-secondary small" th:text="${p.targetRole}">GURU</span>
+                </div>
+                <p class="small text-muted mb-2" th:text="${p.isi}">Diharapkan seluruh dewan guru menghadiri rapat koordinasi evaluasi.</p>
+                <div class="d-flex justify-content-between align-items-center small text-muted">
+                  <span th:text="${p.penulis != null ? p.penulis : 'Admin'}">Kepala Sekolah</span>
+                  <span th:text="${#temporals.format(p.createdAt, 'dd MMM yyyy')}">02 Okt 2026</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classes Taught Overview -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white py-3 border-bottom">
+        <span class="fw-bold"><i class="bi bi-grid-fill me-2 text-success"></i>Daftar Kelas yang Diampu</span>
+      </div>
+      <div class="card-body p-0">
+        <div th:if="${#lists.isEmpty(kelasAjarList)}" class="alert alert-info m-3 text-center">
+          <i class="bi bi-info-circle me-1"></i> Anda belum memiliki jadwal mengajar di kelas manapun. Silakan hubungi bagian kurikulum/admin.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(kelasAjarList)}" class="table-responsive">
+          <table class="table table-bordered table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr class="text-center">
+                <th style="width: 5%;">No</th>
+                <th style="width: 20%;">Nama Kelas</th>
+                <th style="width: 15%;">Jumlah Siswa</th>
+                <th>Mata Pelajaran yang Diampu</th>
+                <th style="width: 25%;">Akses Cepat</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="k, stat : ${kelasAjarList}">
+                <td class="text-center" th:text="${stat.count}">1</td>
+                <td class="fw-bold text-center" th:text="${k.namaKelas}">Kelas 1A</td>
+                <td class="text-center" th:text="${k.jumlahSiswa} + ' Siswa'">30 Siswa</td>
+                <td th:text="${k.daftarMapel}">Matematika</td>
+                <td class="text-center">
+                  <div class="d-inline-flex gap-2">
+                    <a th:href="@{/guru/nilai(kelasId=${k.kelasId})}" class="btn btn-sm btn-outline-primary">
+                      <i class="bi bi-pencil-square me-1"></i> Nilai
+                    </a>
+                    <a th:href="@{/guru/rapor(kelasId=${k.kelasId})}" class="btn btn-sm btn-outline-success">
+                      <i class="bi bi-journal-text me-1"></i> Rapor Kelas
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
