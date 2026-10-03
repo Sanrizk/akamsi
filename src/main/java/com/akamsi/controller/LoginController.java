@@ -22,7 +22,7 @@ public class LoginController {
         for (GrantedAuthority auth : authentication.getAuthorities()) {
             String role = auth.getAuthority();
             if (role.equals("ROLE_ADMIN")) {
-                return "redirect:/admin/users";
+                return "redirect:/admin/dashboard";
             } else if (role.equals("ROLE_GURU")) {
                 return "redirect:/guru/dashboard";
             } else if (role.equals("ROLE_SISWA")) {

@@ -58,49 +58,6 @@ public class AdminAkademikController {
         return "redirect:/admin/akademik/kurikulum";
     }
 
-    // ==================== KELAS ====================
-    @GetMapping("/kelas")
-    public String listKelas(Model model) {
-        model.addAttribute("kelasList", akademikService.getAllKelas());
-        return "admin/akademik/kelas";
-    }
-
-    @PostMapping("/kelas/add")
-    public String addKelas(@ModelAttribute Kelas kelas, RedirectAttributes ra) {
-        try {
-            akademikService.saveKelas(kelas);
-            ra.addFlashAttribute("success", "Kelas berhasil ditambahkan.");
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/admin/akademik/kelas";
-    }
-
-    @PostMapping("/kelas/edit/{id}")
-    public String editKelas(@PathVariable Long id,
-                            @RequestParam String namaKelas,
-                            @RequestParam String tahunAjaran,
-                            RedirectAttributes ra) {
-        try {
-            akademikService.updateKelas(id, namaKelas, tahunAjaran);
-            ra.addFlashAttribute("success", "Kelas berhasil diupdate.");
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/admin/akademik/kelas";
-    }
-
-    @PostMapping("/kelas/delete/{id}")
-    public String deleteKelas(@PathVariable Long id, RedirectAttributes ra) {
-        try {
-            akademikService.deleteKelas(id);
-            ra.addFlashAttribute("success", "Kelas berhasil dihapus.");
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/admin/akademik/kelas";
-    }
-
     // ==================== MAPEL ====================
     @GetMapping("/mapel")
     public String listMapel(Model model) {

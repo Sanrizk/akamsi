@@ -1,51 +1,145 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Dashboard Admin - AKAMSI', ~{::content})}">
 <head>
-    <meta charset="UTF-8">
-    <title>AKAMSI - Admin Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Dashboard Admin - AKAMSI</title>
 </head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">AKAMSI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/admin/users">Users</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/akademik/kelas">Kelas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/akademik/mapel">Mapel</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/spp">SPP</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button class="btn btn-outline-light btn-sm mt-1" type="submit">Logout</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
+<body>
+  <div th:fragment="content">
+    <!-- Welcome Header -->
+    <div class="card shadow-sm border-0 mb-4 bg-gradient bg-dark text-white">
+      <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <span class="badge bg-danger mb-2 fw-semibold">PANEL ADMINISTRATOR UTAMA</span>
+          <h3 class="fw-bold mb-1">Selamat Datang di AKAMSI</h3>
+          <p class="mb-0 text-white-50">
+            <i class="bi bi-calendar3 me-1"></i> <span th:text="${tanggalLengkap}">Senin, 02 Oktober 2026</span> | 
+            Pusat Kendali Data Akademik, Presensi, dan Keuangan SPP
+          </p>
         </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h3 class="mb-0">Admin Dashboard</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">Welcome to the Admin Dashboard module for AKAMSI.</p>
-                
-                <!-- TODO: Insert specific tables, forms, and data iterations here -->
-                
-            </div>
+        <div class="d-flex gap-2">
+          <a th:href="@{/admin/laporan-spp}" class="btn btn-primary fw-semibold">
+            <i class="bi bi-receipt-cutoff me-1"></i> Laporan SPP
+          </a>
+          <a th:href="@{/admin/rapor}" class="btn btn-outline-light fw-semibold">
+            <i class="bi bi-award me-1"></i> Rekap Rapor
+          </a>
         </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core Metrics Summary -->
+    <div class="row g-3 mb-4">
+      <!-- Total Siswa -->
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-primary border-4 h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small fw-bold text-uppercase">Total Siswa Terdaftar</div>
+              <h3 class="fw-bold text-primary mb-0" th:text="${totalSiswa} + ' Siswa'">120 Siswa</h3>
+            </div>
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3">
+              <i class="bi bi-mortarboard-fill fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Guru -->
+      <div class="col-md-3">
+        <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <div class="text-muted small fw-bold text-uppercase">Dewan Guru</div>
+              <h3 class="fw-bold text-success mb-0" th:text="${totalGuru} + ' Guru'">15 Guru</h3>
+            </div>
+            <div class="rounded-circle bg-success bg-opacity-10 text-success p-3">
+              <i class="bi bi-person-video3 fs-3"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Kehadiran Hari Ini -->
+      <div class="col-md-6">
+        <div class="card shadow-sm border-0 border-start border-info border-4 h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div>
+                <div class="text-muted small fw-bold text-uppercase">Kehadiran Siswa Hari Ini</div>
+                <h4 class="fw-bold text-info text-dark mb-0">
+                  <span th:text="${#numbers.formatDecimal(presensiHariIni.persentaseKehadiran, 1, 1)} + '%'">98.0%</span>
+                  <small class="text-muted fs-6 fw-normal ms-1">(<span th:text="${presensiHariIni.totalSesiDicatat}">0</span> Sesi Absensi)</small>
+                </h4>
+              </div>
+              <span th:if="${presensiHariIni.totalSesiDicatat > 0}" class="badge bg-success">LIVE MONITOR</span>
+              <span th:if="${presensiHariIni.totalSesiDicatat == 0}" class="badge bg-secondary">BELUM ADA ABSENSI</span>
+            </div>
+
+            <!-- Attendance Badges Breakdown -->
+            <div class="d-flex gap-2 text-center pt-2 border-top">
+              <div class="flex-fill bg-light p-1 rounded">
+                <small class="text-muted d-block">Hadir</small>
+                <strong class="text-success" th:text="${presensiHariIni.hadir}">0</strong>
+              </div>
+              <div class="flex-fill bg-light p-1 rounded">
+                <small class="text-muted d-block">Sakit</small>
+                <strong class="text-info" th:text="${presensiHariIni.sakit}">0</strong>
+              </div>
+              <div class="flex-fill bg-light p-1 rounded">
+                <small class="text-muted d-block">Izin</small>
+                <strong class="text-warning text-dark" th:text="${presensiHariIni.izin}">0</strong>
+              </div>
+              <div class="flex-fill bg-light p-1 rounded">
+                <small class="text-muted d-block">Alpa</small>
+                <strong class="text-danger" th:text="${presensiHariIni.alpa}">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Shortcuts -->
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-bold mb-2"><i class="bi bi-people-fill text-primary me-2"></i>Manajemen Data</h5>
+            <p class="small text-muted mb-3">Kelola akun pengguna, master siswa, penataan rombel kelas, dan plotting wali kelas.</p>
+            <div class="d-flex gap-2">
+              <a th:href="@{/admin/siswa}" class="btn btn-sm btn-outline-primary">Data Siswa</a>
+              <a th:href="@{/admin/kelas}" class="btn btn-sm btn-outline-primary">Kelas & Wali</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-bold mb-2"><i class="bi bi-wallet-fill text-success me-2"></i>Keuangan & SPP</h5>
+            <p class="small text-muted mb-3">Pencatatan pembayaran manual, cetak kuitansi, monitoring tunggakan, dan laporan kas global.</p>
+            <div class="d-flex gap-2">
+              <a th:href="@{/admin/spp}" class="btn btn-sm btn-outline-success">Transaksi SPP</a>
+              <a th:href="@{/admin/laporan-spp}" class="btn btn-sm btn-outline-success">Laporan Global</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h5 class="fw-bold mb-2"><i class="bi bi-journal-bookmark-fill text-warning me-2"></i>Akademik & Rapor</h5>
+            <p class="small text-muted mb-3">Pantau progres pengisian nilai guru per mapel serta cetak transkrip rapor siswa resmi.</p>
+            <div class="d-flex gap-2">
+              <a th:href="@{/admin/rapor(tab='progres')}" class="btn btn-sm btn-outline-warning text-dark">Progres Nilai</a>
+              <a th:href="@{/admin/rapor(tab='cetak')}" class="btn btn-sm btn-outline-warning text-dark">Cetak Rapor</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

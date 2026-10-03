@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/base :: layout('Kelola Data Kelas & Wali Kelas', ~{::content})}">
+<head>
+  <title>Kelola Data Kelas & Wali Kelas</title>
+</head>
+<body>
+  <div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="mb-0 fw-bold">Manajemen Data Kelas & Rombel</h4>
+        <small class="text-muted">Kelola rombongan belajar dan penugasan resmi Wali Kelas</small>
+      </div>
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahKelas">
+        <i class="bi bi-plus-circle me-1"></i> Tambah Kelas
+      </button>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle me-1"></i> <span th:text="${success}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="bi bi-exclamation-triangle me-1"></i> <span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Kelas Table Card -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-door-open me-2 text-primary"></i>Daftar Kelas Terdaftar</span>
+        <span class="badge bg-primary" th:text="${#lists.size(kelasList)} + ' Kelas'">0 Kelas</span>
+      </div>
+      <div class="card-body p-0">
+        <div th:if="${#lists.isEmpty(kelasList)}" class="alert alert-info m-3 text-center">
+          <i class="bi bi-info-circle me-1"></i> Belum ada kelas yang terdaftar di sistem.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(kelasList)}" class="table-responsive">
+          <table class="table table-bordered table-hover align-middle mb-0">
+            <thead class="table-light text-center">
+              <tr>
+                <th style="width: 5%;">No</th>
+                <th style="width: 25%;">Nama Kelas</th>
+                <th style="width: 15%;">Tahun Ajaran</th>
+                <th>Wali Kelas</th>
+                <th style="width: 20%;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="k, stat : ${kelasList}">
+                <td class="text-center" th:text="${stat.count}">1</td>
+                <td class="fw-bold" th:text="${k.namaKelas}">Kelas 1A</td>
+                <td class="text-center">
+                  <span class="badge bg-secondary" th:text="${k.tahunAjaran != null ? k.tahunAjaran : '-'}">2024/2025</span>
+                </td>
+                <td>
+                  <span th:if="${k.waliKelas != null}">
+                    <i class="bi bi-person-badge text-primary me-1"></i>
+                    <strong th:text="${k.waliKelas.user.namaLengkap}">Budi Santoso, S.Pd</strong>
+                    <small class="text-muted d-block" th:if="${k.waliKelas.nip != null}" th:text="'NIP: ' + ${k.waliKelas.nip}">NIP: 198203...</small>
+                  </span>
+                  <span th:if="${k.waliKelas == null}" class="text-muted fst-italic">
+                    <i class="bi bi-dash-circle me-1"></i> Belum Diplot
+                  </span>
+                </td>
+                <td class="text-center">
+                  <div class="d-inline-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-warning"
+                            data-bs-toggle="modal"
+                            th:data-bs-target="'#modalEditKelas' + ${k.id}">
+                      <i class="bi bi-pencil-square me-1"></i> Edit
+                    </button>
+                    <form th:action="@{/admin/kelas/hapus/{id}(id=${k.id})}" method="post"
+                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus kelas ini?')">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash me-1"></i> Hapus
+                      </button>
+                    </form>
+                  </div>
+
+                  <!-- Modal Edit Kelas -->
+                  <div class="modal fade text-start" th:id="'modalEditKelas' + ${k.id}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <form th:action="@{/admin/kelas/update/{id}(id=${k.id})}" method="post">
+                          <div class="modal-header">
+                            <h5 class="modal-title fw-bold">Edit Data Kelas</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div class="mb-3">
+                              <label class="form-label fw-bold small">Nama Kelas</label>
+                              <input type="text" name="namaKelas" class="form-control" th:value="${k.namaKelas}" required />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-bold small">Tahun Ajaran</label>
+                              <input type="text" name="tahunAjaran" class="form-control" th:value="${k.tahunAjaran}" placeholder="Contoh: 2024/2025" />
+                            </div>
+                            <div class="mb-3">
+                              <label class="form-label fw-bold small">Penugasan Wali Kelas</label>
+                              <select name="waliKelasId" class="form-select">
+                                <option value="">-- Tanpa Wali Kelas / Kosongkan --</option>
+                                <option th:each="g : ${guruList}"
+                                        th:value="${g.id}"
+                                        th:text="${g.user.namaLengkap} + (${g.nip != null ? ' (NIP: ' + g.nip + ')' : ''})"
+                                        th:selected="${k.waliKelas != null and k.waliKelas.id == g.id}">
+                                  Budi Santoso, S.Pd
+                                </option>
+                              </select>
+                              <div class="form-text small">Wali kelas bertanggung jawab atas presensi dan laporan rapor kelas ini.</div>
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Tambah Kelas -->
+    <div class="modal fade" id="modalTambahKelas" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form th:action="@{/admin/kelas/simpan}" method="post">
+            <div class="modal-header">
+              <h5 class="modal-title fw-bold">Tambah Rombel / Kelas Baru</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="namaKelas" class="form-label fw-bold small">Nama Kelas</label>
+                <input type="text" id="namaKelas" name="namaKelas" class="form-control" placeholder="Contoh: Kelas 7A, X-IPA-1" required />
+              </div>
+              <div class="mb-3">
+                <label for="tahunAjaran" class="form-label fw-bold small">Tahun Ajaran</label>
+                <input type="text" id="tahunAjaran" name="tahunAjaran" class="form-control" placeholder="Contoh: 2024/2025" />
+              </div>
+              <div class="mb-3">
+                <label for="waliKelasId" class="form-label fw-bold small">Penugasan Wali Kelas</label>
+                <select id="waliKelasId" name="waliKelasId" class="form-select">
+                  <option value="" selected>-- Pilih Wali Kelas (Opsional) --</option>
+                  <option th:each="g : ${guruList}"
+                          th:value="${g.id}"
+                          th:text="${g.user.namaLengkap} + (${g.nip != null ? ' (NIP: ' + g.nip + ')' : ''})">
+                    Budi Santoso, S.Pd
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-primary">Simpan Kelas</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
